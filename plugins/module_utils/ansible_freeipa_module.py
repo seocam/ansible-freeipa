@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Authors:
+#   Sergio Oliveira Campos <seocam@redhat.com>
 #   Thomas Woerner <twoerner@redhat.com>
 #
 # Copyright (C) 2019  Red Hat
@@ -27,8 +28,9 @@ import tempfile
 import shutil
 import gssapi
 from datetime import datetime
+from pprint import pformat
 from ipalib import api
-from ipalib import errors as ipalib_errors
+from ipalib import errors as ipalib_errors  # noqa
 from ipalib.config import Env
 from ipalib.constants import DEFAULT_CONFIG, LDAP_GENERALIZED_TIME_FORMAT
 try:
@@ -38,6 +40,7 @@ except ImportError:
 from ipapython.ipautil import run
 from ipaplatform.paths import paths
 from ipalib.krb_utils import get_credentials_if_valid
+from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_text
 try:
     from ipalib.x509 import Encoding
@@ -52,7 +55,7 @@ if six.PY3:
     unicode = str
 
 
-def valid_creds(module, principal):
+def valid_creds(module, principal):  # noqa
     """
     Get valid credintials matching the princial, try GSSAPI first
     """
@@ -205,7 +208,7 @@ def date_format(value):
     raise ValueError("Invalid date '%s'" % value)
 
 
-def compare_args_ipa(module, args, ipa):
+def compare_args_ipa(module, args, ipa):  # noqa
     for key in args.keys():
         if key not in ipa:
             return False
@@ -309,3 +312,127 @@ def is_ipv6_addr(ipaddr):
     except socket.error:
         return False
     return True
+
+
+class AnsibleFreeIPAParams(object):
+    def __init__(self, ansible_module):
+        self.ansible_module = ansible_module
+
+    @property
+    def names(self):
+        return self.name
+
+    def __getattr__(self, name):
+        param = self.ansible_module.params.get(name)
+        if param:
+            return _afm_convert(param)
+
+
+class FreeIPABaseModule(AnsibleModule):
+    def __init__(self, *args, **kwargs):
+        super(FreeIPABaseModule, self).__init__(*args, **kwargs)
+
+        self.ccache_dir = None
+        self.ccache_name = None
+        self.changed = False
+        self.exit_args = {}
+        self.ipa_connected = False
+        self._debug = True
+
+        self.ipa_params = AnsibleFreeIPAParams(self)
+        self.ipa_commands = []
+
+    def check_ipa_params(self):
+        pass
+
+    def define_ipa_commands(self):
+        pass
+
+    def api_command(self, command, name=None, args=None):
+        if args is None:
+            args = {}
+
+        if name is None:
+            return api_command_no_name(self, command, args)
+
+        return api_command(self, command, name, args)
+
+    def __enter__(self):
+        principal = self.ipa_params.ipaadmin_principal
+        password = self.ipa_params.ipaadmin_password
+
+        try:
+            if not valid_creds(self, principal):
+                self.ccache_dir, self.ccache_name = temp_kinit(
+                    principal, password,
+                )
+
+            api_connect()
+
+        except Exception as excpt:
+            self.fail_json(msg=str(excpt))
+        else:
+            self.ipa_connected = True
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val:
+            self.fail_json(msg=str(exc_val))
+
+        # TODO: shouldn't we also disconnect from api backend?
+        temp_kdestroy(self.ccache_dir, self.ccache_name)
+
+        self.exit_json(changed=self.changed, user=self.exit_args)
+
+    def get_command_errors(self, command, result):
+        # Get all errors
+        # All "already a member" and "not a member" failures in the
+        # result are ignored. All others are reported.
+        errors = []
+        for item in result.get("failed", tuple()):
+            failed_item = result["failed"][item]
+            for member_type in failed_item:
+                for member, failure in failed_item[member_type]:
+                    if "already a member" in failure \
+                       or "not a member" in failure:
+                        continue
+                    errors.append("%s: %s %s: %s" % (
+                        command, member_type, member, failure))
+
+        if len(errors) > 0:
+            self.fail_json(", ".join("errors"))
+
+    def _run_ipa_commands(self):
+        result = None
+
+        for name, command, args in self.ipa_commands:
+            try:
+                result = self.api_command(command, name, args)
+            except Exception as excpt:
+                self.fail_json(
+                    msg="%s: %s: %s" % (command, name, str(excpt))
+                )
+            else:
+                if "completed" in result:
+                    if result["completed"] > 0:
+                        self.changed = True
+                else:
+                    self.changed = True
+
+            self.get_command_errors(command, result)
+
+    def plog(self, value):
+        self.log(pformat(value))
+
+    def pdebug(self, value):
+        self.debug(pformat(value))
+
+    def ipa_run(self):
+        with self:
+            if not self.ipa_connected:
+                return
+
+            self.check_ipa_params()
+            self.define_ipa_commands()
+            self._run_ipa_commands()
