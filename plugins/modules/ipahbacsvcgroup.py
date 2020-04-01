@@ -311,7 +311,7 @@ def main():
                         [
                             name,
                             "hbacsvcgroup_add_member",
-                            {"hbacsvc": [to_text(svc) for svc in hbacsvc],},
+                            {"hbacsvc": [to_text(svc) for svc in hbacsvc]},
                         ]
                     )
             elif state == "absent":
@@ -330,7 +330,7 @@ def main():
                         [
                             name,
                             "hbacsvcgroup_remove_member",
-                            {"hbacsvc": [to_text(svc) for svc in hbacsvc],},
+                            {"hbacsvc": [to_text(svc) for svc in hbacsvc]},
                         ]
                     )
             else:

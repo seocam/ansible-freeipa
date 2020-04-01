@@ -245,7 +245,7 @@ def main():
     # additional
     options.server = ansible_module.params.get("server")
     master_host_name = ansible_module.params.get("config_master_host_name")
-    ccache = ansible_module.params.get("ccache")
+    # ccache = ansible_module.params.get("ccache")
     # os.environ['KRB5CCNAME'] = ccache
     os.environ["KRB5CCNAME"] = ansible_module.params.get("installer_ccache")
     installer._ccache = ansible_module.params.get("installer_ccache")

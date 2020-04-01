@@ -56,8 +56,8 @@ param_docs = {
     "external_ca": "External ca setting",
     "setup_adtrust": "Configure AD trust capability",
     "external_cert_files": [
-        "File containing the IPA CA certificate and the external CA certificate",
-        "chain",
+        "File containing the IPA CA certificate and the external CA ",
+        "certificate chain",
     ],
     "reverse_zones": "The reverse DNS zones to use",
     "no_reverse": "Do not create new reverse DNS zone",
@@ -100,14 +100,18 @@ param_docs = {
     "dirsrv_pin": "The password to unlock the Directory Server private key",
     "http_pin": "The password to unlock the Apache Server private key",
     "pkinit_pin": "The password to unlock the Kerberos KDC private key",
-    "dirsrv_cert_name": "Name of the Directory Server SSL certificate to install",
+    "dirsrv_cert_name": [
+        "Name of the Directory Server SSL certificate to install"
+    ],
     "http_cert_name": "Name of the Apache Server SSL certificate to install",
     "pkinit_cert_name": "Name of the Kerberos KDC SSL certificate to install",
     "keytab": "Path to backed up keytab from previous enrollment",
     "mkhomedir": "Create home directories for users on their first login",
     "adtrust_netbios_name": "The adtrust netbios_name setting",
     "adtrust_reset_netbios_name": "The adtrust reset_netbios_name setting",
-    "zonemgr": "DNS zone manager e-mail address. Defaults to hostmaster@DOMAIN",
+    "zonemgr": [
+        "DNS zone manager e-mail address. Defaults to hostmaster@DOMAIN"
+    ],
     "ssh_trust_dns": "Configure OpenSSH client to trust DNS SSHFP records",
     "dns_ip_addresses": "The dns ip_addresses setting",
     "dns_reverse_zones": "The dns reverse_zones setting",
@@ -129,8 +133,9 @@ param_docs = {
     "debug": "Turn on extra debugging",
     "basedn": "The basedn of the IPA server (of the form dc=example,dc=com)",
     "allow_repair": [
-        "Allow repair of already joined hosts. Contrary to ipaclient_force_join",
-        "the host entry will not be changed on the server",
+        "Allow repair of already joined hosts. Contrary to",
+        "ipaclient_force_join the host entry will not be",
+        "changed on the server",
     ],
     "backup": "File to backup",
     "fqdn": ["The fully-qualified hostname of the host to add/modify/remove"],
@@ -162,7 +167,9 @@ param_docs = {
     "request_cert": "Request certificate for the machine",
     "preserve_sssd": "Preserve old SSSD configuration if possible",
     "no_sudo": "Do not configure SSSD as data source for sudo",
-    "fixed_primary": "Configure sssd to use fixed server as primary IPA server",
+    "fixed_primary": [
+        "Configure sssd to use fixed server as primary IPA server"
+    ],
     "permit": "Disable access rules by default, permit all access",
     "no_krb5_offline_passwords": [
         "Configure SSSD not to store user password when the server is offline"

@@ -441,7 +441,7 @@ def main():
                             [
                                 name,
                                 "group_add_member",
-                                {"user": user, "group": group,},
+                                {"user": user, "group": group},
                             ]
                         )
 

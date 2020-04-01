@@ -729,7 +729,7 @@ def main():
                         [
                             name,
                             "service_add_principal",
-                            {"krbprincipalname": _principal,},
+                            {"krbprincipalname": _principal},
                         ]
                     )
 
@@ -739,7 +739,7 @@ def main():
                         [
                             name,
                             "service_remove_principal",
-                            {"krbprincipalname": _principal,},
+                            {"krbprincipalname": _principal},
                         ]
                     )
 
@@ -748,7 +748,7 @@ def main():
                         [
                             name,
                             "service_add_cert",
-                            {"usercertificate": _certificate,},
+                            {"usercertificate": _certificate},
                         ]
                     )
                 # Remove certificates
@@ -757,7 +757,7 @@ def main():
                         [
                             name,
                             "service_remove_cert",
-                            {"usercertificate": _certificate,},
+                            {"usercertificate": _certificate},
                         ]
                     )
 
@@ -819,17 +819,14 @@ def main():
                     or len(allow_retrieve_keytab_hostgroup_add) > 0
                     or len(allow_retrieve_keytab_hostgroup_add) > 0
                 ):
+                    args = {
+                        "user": allow_retrieve_keytab_user_add,
+                        "group": allow_retrieve_keytab_group_add,
+                        "host": allow_retrieve_keytab_host_add,
+                        "hostgroup": allow_retrieve_keytab_hostgroup_add,
+                    }
                     commands.append(
-                        [
-                            name,
-                            "service_allow_retrieve_keytab",
-                            {
-                                "user": allow_retrieve_keytab_user_add,
-                                "group": allow_retrieve_keytab_group_add,
-                                "host": allow_retrieve_keytab_host_add,
-                                "hostgroup": allow_retrieve_keytab_hostgroup_add,
-                            },
-                        ]
+                        [name, "service_allow_retrieve_keytab", args]
                     )
 
                 # Disllow retrieve keytab
@@ -839,17 +836,14 @@ def main():
                     or len(allow_retrieve_keytab_host_del) > 0
                     or len(allow_retrieve_keytab_hostgroup_del) > 0
                 ):
+                    args = {
+                        "user": allow_retrieve_keytab_user_del,
+                        "group": allow_retrieve_keytab_group_del,
+                        "host": allow_retrieve_keytab_host_del,
+                        "hostgroup": allow_retrieve_keytab_hostgroup_del,
+                    }
                     commands.append(
-                        [
-                            name,
-                            "service_disallow_retrieve_keytab",
-                            {
-                                "user": allow_retrieve_keytab_user_del,
-                                "group": allow_retrieve_keytab_group_del,
-                                "host": allow_retrieve_keytab_host_del,
-                                "hostgroup": allow_retrieve_keytab_hostgroup_del,
-                            },
-                        ]
+                        [name, "service_disallow_retrieve_keytab", args]
                     )
 
             elif state == "absent":
@@ -868,7 +862,7 @@ def main():
                                 [
                                     name,
                                     "service_remove_principal",
-                                    {"krbprincipalname": _principal,},
+                                    {"krbprincipalname": _principal},
                                 ]
                             )
                     # Remove certificates
@@ -880,7 +874,7 @@ def main():
                                     [
                                         name,
                                         "service_remove_cert",
-                                        {"usercertificate": _certificate,},
+                                        {"usercertificate": _certificate},
                                     ]
                                 )
 
@@ -917,17 +911,14 @@ def main():
                         or allow_retrieve_keytab_host is not None
                         or allow_retrieve_keytab_hostgroup is not None
                     ):
+                        args = {
+                            "user": allow_retrieve_keytab_user,
+                            "group": allow_retrieve_keytab_group,
+                            "host": allow_retrieve_keytab_host,
+                            "hostgroup": allow_retrieve_keytab_hostgroup,
+                        }
                         commands.append(
-                            [
-                                name,
-                                "service_disallow_retrieve_keytab",
-                                {
-                                    "user": allow_retrieve_keytab_user,
-                                    "group": allow_retrieve_keytab_group,
-                                    "host": allow_retrieve_keytab_host,
-                                    "hostgroup": allow_retrieve_keytab_hostgroup,
-                                },
-                            ]
+                            [name, "service_disallow_retrieve_keytab", args]
                         )
 
             elif state == "disabled":

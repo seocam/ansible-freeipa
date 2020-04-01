@@ -334,7 +334,7 @@ def main():
                         [
                             name,
                             "hostgroup_add_member",
-                            {"host": host, "hostgroup": hostgroup,},
+                            {"host": host, "hostgroup": hostgroup},
                         ]
                     )
             elif state == "absent":
@@ -353,7 +353,7 @@ def main():
                         [
                             name,
                             "hostgroup_remove_member",
-                            {"host": host, "hostgroup": hostgroup,},
+                            {"host": host, "hostgroup": hostgroup},
                         ]
                     )
             else:

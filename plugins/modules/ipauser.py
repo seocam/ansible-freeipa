@@ -754,7 +754,7 @@ def check_parameters(
         ]
         if action == "user":
             invalid.extend(
-                ["principal", "manager", "certificate", "certmapdata",]
+                ["principal", "manager", "certificate", "certmapdata"]
             )
         for x in invalid:
             if vars()[x] is not None:
@@ -1391,7 +1391,7 @@ def main():
                     # Add managers
                     if len(manager_add) > 0:
                         commands.append(
-                            [name, "user_add_manager", {"user": manager_add,}]
+                            [name, "user_add_manager", {"user": manager_add}]
                         )
                     # Remove managers
                     if len(manager_del) > 0:
@@ -1399,7 +1399,7 @@ def main():
                             [
                                 name,
                                 "user_remove_manager",
-                                {"user": manager_del,},
+                                {"user": manager_del},
                             ]
                         )
 
@@ -1415,7 +1415,7 @@ def main():
                                 [
                                     name,
                                     "user_add_principal",
-                                    {"krbprincipalname": _principal,},
+                                    {"krbprincipalname": _principal},
                                 ]
                             )
                     # Remove principals
@@ -1425,7 +1425,7 @@ def main():
                                 [
                                     name,
                                     "user_remove_principal",
-                                    {"krbprincipalname": _principal,},
+                                    {"krbprincipalname": _principal},
                                 ]
                             )
 
@@ -1441,7 +1441,7 @@ def main():
                                 [
                                     name,
                                     "user_add_cert",
-                                    {"usercertificate": _certificate,},
+                                    {"usercertificate": _certificate},
                                 ]
                             )
                     # Remove certificates
@@ -1451,7 +1451,7 @@ def main():
                                 [
                                     name,
                                     "user_remove_cert",
-                                    {"usercertificate": _certificate,},
+                                    {"usercertificate": _certificate},
                                 ]
                             )
 
@@ -1487,7 +1487,7 @@ def main():
                     # Ensure managers are present
                     if manager is not None and len(manager) > 0:
                         commands.append(
-                            [name, "user_add_manager", {"user": manager,}]
+                            [name, "user_add_manager", {"user": manager}]
                         )
 
                     # Principals need to be added and removed one by one,
@@ -1502,7 +1502,7 @@ def main():
                                 [
                                     name,
                                     "user_add_principal",
-                                    {"krbprincipalname": _principal,},
+                                    {"krbprincipalname": _principal},
                                 ]
                             )
 
@@ -1518,7 +1518,7 @@ def main():
                                 [
                                     name,
                                     "user_add_cert",
-                                    {"usercertificate": _certificate,},
+                                    {"usercertificate": _certificate},
                                 ]
                             )
 
@@ -1555,7 +1555,7 @@ def main():
                     # Ensure managers are absent
                     if manager is not None and len(manager) > 0:
                         commands.append(
-                            [name, "user_remove_manager", {"user": manager,}]
+                            [name, "user_remove_manager", {"user": manager}]
                         )
 
                     # Principals need to be added and removed one by one,
@@ -1569,7 +1569,7 @@ def main():
                             [
                                 name,
                                 "user_remove_principal",
-                                {"krbprincipalname": principal,},
+                                {"krbprincipalname": principal},
                             ]
                         )
 
@@ -1585,7 +1585,7 @@ def main():
                                 [
                                     name,
                                     "user_remove_cert",
-                                    {"usercertificate": _certificate,},
+                                    {"usercertificate": _certificate},
                                 ]
                             )
 

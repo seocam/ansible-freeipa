@@ -1320,7 +1320,7 @@ def main():
                         [
                             name,
                             "host_add_cert",
-                            {"usercertificate": _certificate,},
+                            {"usercertificate": _certificate},
                         ]
                     )
                 # Remove certificates
@@ -1329,7 +1329,7 @@ def main():
                         [
                             name,
                             "host_remove_cert",
-                            {"usercertificate": _certificate,},
+                            {"usercertificate": _certificate},
                         ]
                     )
 
@@ -1344,7 +1344,7 @@ def main():
                         [
                             name,
                             "host_add_managedby",
-                            {"host": _managedby_host,},
+                            {"host": _managedby_host},
                         ]
                     )
                 # Remove managedby_hosts
@@ -1353,7 +1353,7 @@ def main():
                         [
                             name,
                             "host_remove_managedby",
-                            {"host": _managedby_host,},
+                            {"host": _managedby_host},
                         ]
                     )
 
@@ -1368,7 +1368,7 @@ def main():
                         [
                             name,
                             "host_add_principal",
-                            {"krbprincipalname": _principal,},
+                            {"krbprincipalname": _principal},
                         ]
                     )
                 # Remove principals
@@ -1377,7 +1377,7 @@ def main():
                         [
                             name,
                             "host_remove_principal",
-                            {"krbprincipalname": _principal,},
+                            {"krbprincipalname": _principal},
                         ]
                     )
 
@@ -1428,18 +1428,13 @@ def main():
                     or len(allow_retrieve_keytab_host_add) > 0
                     or len(allow_retrieve_keytab_hostgroup_add) > 0
                 ):
-                    commands.append(
-                        [
-                            name,
-                            "host_allow_retrieve_keytab",
-                            {
-                                "user": allow_retrieve_keytab_user_add,
-                                "group": allow_retrieve_keytab_group_add,
-                                "host": allow_retrieve_keytab_host_add,
-                                "hostgroup": allow_retrieve_keytab_hostgroup_add,
-                            },
-                        ]
-                    )
+                    args = {
+                        "user": allow_retrieve_keytab_user_add,
+                        "group": allow_retrieve_keytab_group_add,
+                        "host": allow_retrieve_keytab_host_add,
+                        "hostgroup": allow_retrieve_keytab_hostgroup_add,
+                    }
+                    commands.append([name, "host_allow_retrieve_keytab", args])
 
                 # Disallow retrieve keytab
                 if (
@@ -1448,17 +1443,14 @@ def main():
                     or len(allow_retrieve_keytab_host_del) > 0
                     or len(allow_retrieve_keytab_hostgroup_del) > 0
                 ):
+                    args = {
+                        "user": allow_retrieve_keytab_user_del,
+                        "group": allow_retrieve_keytab_group_del,
+                        "host": allow_retrieve_keytab_host_del,
+                        "hostgroup": allow_retrieve_keytab_hostgroup_del,
+                    }
                     commands.append(
-                        [
-                            name,
-                            "host_disallow_retrieve_keytab",
-                            {
-                                "user": allow_retrieve_keytab_user_del,
-                                "group": allow_retrieve_keytab_group_del,
-                                "host": allow_retrieve_keytab_host_del,
-                                "hostgroup": allow_retrieve_keytab_hostgroup_del,
-                            },
-                        ]
+                        [name, "host_disallow_retrieve_keytab", args]
                     )
 
                 if len(dnsrecord_a_add) > 0 or len(dnsrecord_aaaa_add) > 0:
@@ -1514,7 +1506,7 @@ def main():
                                 [
                                     name,
                                     "host_remove_cert",
-                                    {"usercertificate": _certificate,},
+                                    {"usercertificate": _certificate},
                                 ]
                             )
 
@@ -1530,7 +1522,7 @@ def main():
                                 [
                                     name,
                                     "host_remove_managedby",
-                                    {"host": _managedby_host,},
+                                    {"host": _managedby_host},
                                 ]
                             )
 
@@ -1546,7 +1538,7 @@ def main():
                                 [
                                     name,
                                     "host_remove_principal",
-                                    {"krbprincipalname": _principal,},
+                                    {"krbprincipalname": _principal},
                                 ]
                             )
 
@@ -1577,17 +1569,14 @@ def main():
                         or allow_retrieve_keytab_host is not None
                         or allow_retrieve_keytab_hostgroup is not None
                     ):
+                        args = {
+                            "user": allow_retrieve_keytab_user,
+                            "group": allow_retrieve_keytab_group,
+                            "host": allow_retrieve_keytab_host,
+                            "hostgroup": allow_retrieve_keytab_hostgroup,
+                        }
                         commands.append(
-                            [
-                                name,
-                                "host_disallow_retrieve_keytab",
-                                {
-                                    "user": allow_retrieve_keytab_user,
-                                    "group": allow_retrieve_keytab_group,
-                                    "host": allow_retrieve_keytab_host,
-                                    "hostgroup": allow_retrieve_keytab_hostgroup,
-                                },
-                            ]
+                            [name, "host_disallow_retrieve_keytab", args]
                         )
 
                     dnsrecord_args = gen_dnsrecord_args(

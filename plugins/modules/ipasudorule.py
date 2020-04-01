@@ -569,7 +569,7 @@ def main():
                             [
                                 name,
                                 "sudorule_add_user",
-                                {"user": user_add, "group": group_add,},
+                                {"user": user_add, "group": group_add},
                             ]
                         )
                     # Remove users and groups
@@ -578,7 +578,7 @@ def main():
                             [
                                 name,
                                 "sudorule_remove_user",
-                                {"user": user_del, "group": group_del,},
+                                {"user": user_del, "group": group_del},
                             ]
                         )
 
@@ -700,7 +700,7 @@ def main():
                             [
                                 name,
                                 "sudorule_add_host",
-                                {"host": host, "hostgroup": hostgroup,},
+                                {"host": host, "hostgroup": hostgroup},
                             ]
                         )
 
@@ -710,7 +710,7 @@ def main():
                             [
                                 name,
                                 "sudorule_add_user",
-                                {"user": user, "group": group,},
+                                {"user": user, "group": group},
                             ]
                         )
 
@@ -794,7 +794,7 @@ def main():
                             [
                                 name,
                                 "sudorule_remove_host",
-                                {"host": host, "hostgroup": hostgroup,},
+                                {"host": host, "hostgroup": hostgroup},
                             ]
                         )
 
@@ -804,7 +804,7 @@ def main():
                             [
                                 name,
                                 "sudorule_remove_user",
-                                {"user": user, "group": group,},
+                                {"user": user, "group": group},
                             ]
                         )
 

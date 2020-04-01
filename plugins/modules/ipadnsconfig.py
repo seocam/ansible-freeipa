@@ -97,20 +97,16 @@ RETURN = """
 """
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_text
 from ansible.module_utils.ansible_freeipa_module import (
     temp_kinit,
     temp_kdestroy,
     valid_creds,
     api_connect,
-    api_command,
     api_command_no_name,
     compare_args_ipa,
     module_params_get,
-    gen_add_del_lists,
     is_ipv4_addr,
     is_ipv6_addr,
-    ipalib_errors,
 )
 
 
