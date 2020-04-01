@@ -464,10 +464,19 @@ user:
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_text
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, date_format, \
-    compare_args_ipa, module_params_get, api_check_param, api_get_realm, \
-    api_command_no_name
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    date_format,
+    compare_args_ipa,
+    module_params_get,
+    api_check_param,
+    api_get_realm,
+    api_command_no_name,
+)
 import six
 
 
@@ -486,13 +495,14 @@ def find_user(module, name, preserved=False):
     _result = api_command(module, "user_find", name, _args)
 
     if len(_result["result"]) > 1:
-        module.fail_json(
-            msg="There is more than one user '%s'" % (name))
+        module.fail_json(msg="There is more than one user '%s'" % (name))
     elif len(_result["result"]) == 1:
         # Transform each principal to a string
         _result = _result["result"][0]
-        if "krbprincipalname" in _result \
-           and _result["krbprincipalname"] is not None:
+        if (
+            "krbprincipalname" in _result
+            and _result["krbprincipalname"] is not None
+        ):
             _list = []
             for x in _result["krbprincipalname"]:
                 _list.append(str(x))
@@ -502,12 +512,43 @@ def find_user(module, name, preserved=False):
         return None
 
 
-def gen_args(first, last, fullname, displayname, initials, homedir, shell,
-             email, principalexpiration, passwordexpiration, password,
-             random, uid, gid, city, userstate, postalcode, phone, mobile,
-             pager, fax, orgunit, title, carlicense, sshpubkey, userauthtype,
-             userclass, radius, radiususer, departmentnumber, employeenumber,
-             employeetype, preferredlanguage, noprivate, nomembers):
+def gen_args(
+    first,
+    last,
+    fullname,
+    displayname,
+    initials,
+    homedir,
+    shell,
+    email,
+    principalexpiration,
+    passwordexpiration,
+    password,
+    random,
+    uid,
+    gid,
+    city,
+    userstate,
+    postalcode,
+    phone,
+    mobile,
+    pager,
+    fax,
+    orgunit,
+    title,
+    carlicense,
+    sshpubkey,
+    userauthtype,
+    userclass,
+    radius,
+    radiususer,
+    departmentnumber,
+    employeenumber,
+    employeetype,
+    preferredlanguage,
+    noprivate,
+    nomembers,
+):
     # principal, manager, certificate and certmapdata are handled not in here
     _args = {}
     if first is not None:
@@ -583,57 +624,147 @@ def gen_args(first, last, fullname, displayname, initials, homedir, shell,
     return _args
 
 
-def check_parameters(module, state, action,
-                     first, last, fullname, displayname, initials, homedir,
-                     shell, email, principal, principalexpiration,
-                     passwordexpiration, password, random, uid, gid, city,
-                     phone, mobile, pager, fax, orgunit, title, manager,
-                     carlicense, sshpubkey, userauthtype, userclass, radius,
-                     radiususer, departmentnumber, employeenumber,
-                     employeetype, preferredlanguage, certificate,
-                     certmapdata, noprivate, nomembers, preserve,
-                     update_password):
+def check_parameters(
+    module,
+    state,
+    action,
+    first,
+    last,
+    fullname,
+    displayname,
+    initials,
+    homedir,
+    shell,
+    email,
+    principal,
+    principalexpiration,
+    passwordexpiration,
+    password,
+    random,
+    uid,
+    gid,
+    city,
+    phone,
+    mobile,
+    pager,
+    fax,
+    orgunit,
+    title,
+    manager,
+    carlicense,
+    sshpubkey,
+    userauthtype,
+    userclass,
+    radius,
+    radiususer,
+    departmentnumber,
+    employeenumber,
+    employeetype,
+    preferredlanguage,
+    certificate,
+    certmapdata,
+    noprivate,
+    nomembers,
+    preserve,
+    update_password,
+):
 
     if state == "present":
         if action == "member":
-            invalid = ["first", "last", "fullname", "displayname", "initials",
-                       "homedir", "shell", "email", "principalexpiration",
-                       "passwordexpiration", "password", "random", "uid",
-                       "gid", "city", "phone", "mobile", "pager", "fax",
-                       "orgunit", "title", "carlicense", "sshpubkey",
-                       "userauthtype", "userclass", "radius", "radiususer",
-                       "departmentnumber", "employeenumber", "employeetype",
-                       "preferredlanguage", "noprivate", "nomembers",
-                       "preserve", "update_password"]
+            invalid = [
+                "first",
+                "last",
+                "fullname",
+                "displayname",
+                "initials",
+                "homedir",
+                "shell",
+                "email",
+                "principalexpiration",
+                "passwordexpiration",
+                "password",
+                "random",
+                "uid",
+                "gid",
+                "city",
+                "phone",
+                "mobile",
+                "pager",
+                "fax",
+                "orgunit",
+                "title",
+                "carlicense",
+                "sshpubkey",
+                "userauthtype",
+                "userclass",
+                "radius",
+                "radiususer",
+                "departmentnumber",
+                "employeenumber",
+                "employeetype",
+                "preferredlanguage",
+                "noprivate",
+                "nomembers",
+                "preserve",
+                "update_password",
+            ]
             for x in invalid:
                 if vars()[x] is not None:
                     module.fail_json(
                         msg="Argument '%s' can not be used with action "
-                        "'%s'" % (x, action))
+                        "'%s'" % (x, action)
+                    )
 
     else:
-        invalid = ["first", "last", "fullname", "displayname", "initials",
-                   "homedir", "shell", "email", "principalexpiration",
-                   "passwordexpiration", "password", "random", "uid",
-                   "gid", "city", "phone", "mobile", "pager", "fax",
-                   "orgunit", "title", "carlicense", "sshpubkey",
-                   "userauthtype", "userclass", "radius", "radiususer",
-                   "departmentnumber", "employeenumber", "employeetype",
-                   "preferredlanguage", "noprivate", "nomembers",
-                   "update_password"]
+        invalid = [
+            "first",
+            "last",
+            "fullname",
+            "displayname",
+            "initials",
+            "homedir",
+            "shell",
+            "email",
+            "principalexpiration",
+            "passwordexpiration",
+            "password",
+            "random",
+            "uid",
+            "gid",
+            "city",
+            "phone",
+            "mobile",
+            "pager",
+            "fax",
+            "orgunit",
+            "title",
+            "carlicense",
+            "sshpubkey",
+            "userauthtype",
+            "userclass",
+            "radius",
+            "radiususer",
+            "departmentnumber",
+            "employeenumber",
+            "employeetype",
+            "preferredlanguage",
+            "noprivate",
+            "nomembers",
+            "update_password",
+        ]
         if action == "user":
-            invalid.extend(["principal", "manager",
-                            "certificate", "certmapdata",
-                            ])
+            invalid.extend(
+                ["principal", "manager", "certificate", "certmapdata",]
+            )
         for x in invalid:
             if vars()[x] is not None:
                 module.fail_json(
-                    msg="Argument '%s' can not be used with state '%s'" %
-                    (x, state))
+                    msg="Argument '%s' can not be used with state '%s'"
+                    % (x, state)
+                )
 
         if state != "absent" and preserve is not None:
-            module.fail_json(
-                msg="Preserve is only possible for state=absent")
+            module.fail_json(msg="Preserve is only possible for state=absent")
 
     if certmapdata is not None:
         for x in certmapdata:
@@ -641,11 +772,13 @@ def check_parameters(module, state, action,
             issuer = x.get("issuer")
             subject = x.get("subject")
 
-            if certificate is not None \
-               and (issuer is not None or subject is not None):
+            if certificate is not None and (
+                issuer is not None or subject is not None
+            ):
                 module.fail_json(
                     msg="certmapdata: certificate can not be used with "
-                    "issuer or subject")
+                    "issuer or subject"
+                )
             if certificate is None:
                 if issuer is None:
                     module.fail_json(msg="certmapdata: issuer is missing")
@@ -655,9 +788,12 @@ def check_parameters(module, state, action,
 
 def extend_emails(email, default_email_domain):
     if email is not None:
-        return [ "%s@%s" % (_email, default_email_domain)
-                 if "@" not in _email else _email
-                 for _email in email]
+        return [
+            "%s@%s" % (_email, default_email_domain)
+            if "@" not in _email
+            else _email
+            for _email in email
+        ]
     return email
 
 
@@ -687,17 +823,19 @@ def main():
         homedir=dict(type="str", default=None),
         shell=dict(type="str", aliases=["loginshell"], default=None),
         email=dict(type="list", default=None),
-        principal=dict(type="list", aliases=["principalname",
-                                             "krbprincipalname"],
-                       default=None),
-        principalexpiration=dict(type="str",
-                                 aliases=["krbprincipalexpiration"],
-                                 default=None),
-        passwordexpiration=dict(type="str",
-                                aliases=["krbpasswordexpiration"],
-                                default=None),
+        principal=dict(
+            type="list",
+            aliases=["principalname", "krbprincipalname"],
+            default=None,
+        ),
+        principalexpiration=dict(
+            type="str", aliases=["krbprincipalexpiration"], default=None
+        ),
+        passwordexpiration=dict(
+            type="str", aliases=["krbpasswordexpiration"], default=None
+        ),
         password=dict(type="str", default=None, no_log=True),
-        random=dict(type='bool', default=None),
+        random=dict(type="bool", default=None),
         uid=dict(type="int", aliases=["uidnumber"], default=None),
         gid=dict(type="int", aliases=["gidnumber"], default=None),
         city=dict(type="str", default=None),
@@ -706,40 +844,50 @@ def main():
         phone=dict(type="list", aliases=["telephonenumber"], default=None),
         mobile=dict(type="list", default=None),
         pager=dict(type="list", default=None),
-        fax=dict(type="list", aliases=["facsimiletelephonenumber"],
-                 default=None),
+        fax=dict(
+            type="list", aliases=["facsimiletelephonenumber"], default=None
+        ),
         orgunit=dict(type="str", aliases=["ou"], default=None),
         title=dict(type="str", default=None),
         manager=dict(type="list", default=None),
         carlicense=dict(type="list", default=None),
-        sshpubkey=dict(type="list", aliases=["ipasshpubkey"],
-                       default=None),
-        userauthtype=dict(type='list', aliases=["ipauserauthtype"],
-                          default=None,
-                          choices=['password', 'radius', 'otp', '']),
-        userclass=dict(type="list", aliases=["class"],
-                       default=None),
-        radius=dict(type="str", aliases=["ipatokenradiusconfiglink"],
-                    default=None),
-        radiususer=dict(type="str", aliases=["radiususername",
-                                             "ipatokenradiususername"],
-                        default=None),
+        sshpubkey=dict(type="list", aliases=["ipasshpubkey"], default=None),
+        userauthtype=dict(
+            type="list",
+            aliases=["ipauserauthtype"],
+            default=None,
+            choices=["password", "radius", "otp", ""],
+        ),
+        userclass=dict(type="list", aliases=["class"], default=None),
+        radius=dict(
+            type="str", aliases=["ipatokenradiusconfiglink"], default=None
+        ),
+        radiususer=dict(
+            type="str",
+            aliases=["radiususername", "ipatokenradiususername"],
+            default=None,
+        ),
         departmentnumber=dict(type="list", default=None),
         employeenumber=dict(type="str", default=None),
         employeetype=dict(type="str", default=None),
         preferredlanguage=dict(type="str", default=None),
-        certificate=dict(type="list", aliases=["usercertificate"],
-                         default=None),
-        certmapdata=dict(type="list", default=None,
-                         options=dict(
-                             # Here certificate is a simple string
-                             certificate=dict(type="str", default=None),
-                             issuer=dict(type="str", default=None),
-                             subject=dict(type="str", default=None)
-                         ),
-                         elements='dict', required=False),
-        noprivate=dict(type='bool', default=None),
-        nomembers=dict(type='bool', default=None),
+        certificate=dict(
+            type="list", aliases=["usercertificate"], default=None
+        ),
+        certmapdata=dict(
+            type="list",
+            default=None,
+            options=dict(
+                # Here certificate is a simple string
+                certificate=dict(type="str", default=None),
+                issuer=dict(type="str", default=None),
+                subject=dict(type="str", default=None),
+            ),
+            elements="dict",
+            required=False,
+        ),
+        noprivate=dict(type="bool", default=None),
+        nomembers=dict(type="bool", default=None),
     )
 
     ansible_module = AnsibleModule(
@@ -747,32 +895,44 @@ def main():
             # general
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
-
-            name=dict(type="list", aliases=["login"], default=None,
-                      required=False),
-            users=dict(type="list", aliases=["login"], default=None,
-                       options=dict(
-                           # Here name is a simple string
-                           name=dict(type="str", required=True),
-                           # Add user specific parameters
-                           **user_spec
-                       ),
-                       elements='dict', required=False),
-
+            name=dict(
+                type="list", aliases=["login"], default=None, required=False
+            ),
+            users=dict(
+                type="list",
+                aliases=["login"],
+                default=None,
+                options=dict(
+                    # Here name is a simple string
+                    name=dict(type="str", required=True),
+                    # Add user specific parameters
+                    **user_spec
+                ),
+                elements="dict",
+                required=False,
+            ),
             # deleted
-            preserve=dict(required=False, type='bool', default=None),
-
+            preserve=dict(required=False, type="bool", default=None),
             # mod
-            update_password=dict(type='str', default=None,
-                                 choices=['always', 'on_create']),
-
+            update_password=dict(
+                type="str", default=None, choices=["always", "on_create"]
+            ),
             # general
-            action=dict(type="str", default="user",
-                        choices=["member", "user"]),
-            state=dict(type="str", default="present",
-                       choices=["present", "absent", "enabled", "disabled",
-                                "unlocked", "undeleted"]),
-
+            action=dict(
+                type="str", default="user", choices=["member", "user"]
+            ),
+            state=dict(
+                type="str",
+                default="present",
+                choices=[
+                    "present",
+                    "absent",
+                    "enabled",
+                    "disabled",
+                    "unlocked",
+                    "undeleted",
+                ],
+            ),
             # Add user specific parameters for simple use case
             **user_spec
         ),
@@ -786,8 +946,9 @@ def main():
     # Get parameters
 
     # general
-    ipaadmin_principal = module_params_get(ansible_module,
-                                           "ipaadmin_principal")
+    ipaadmin_principal = module_params_get(
+        ansible_module, "ipaadmin_principal"
+    )
     ipaadmin_password = module_params_get(ansible_module, "ipaadmin_password")
     names = module_params_get(ansible_module, "name")
     users = module_params_get(ansible_module, "users")
@@ -802,14 +963,16 @@ def main():
     shell = module_params_get(ansible_module, "shell")
     email = module_params_get(ansible_module, "email")
     principal = module_params_get(ansible_module, "principal")
-    principalexpiration = module_params_get(ansible_module,
-                                            "principalexpiration")
+    principalexpiration = module_params_get(
+        ansible_module, "principalexpiration"
+    )
     if principalexpiration is not None:
         if principalexpiration[:-1] != "Z":
             principalexpiration = principalexpiration + "Z"
         principalexpiration = date_format(principalexpiration)
-    passwordexpiration = module_params_get(ansible_module,
-                                           "passwordexpiration")
+    passwordexpiration = module_params_get(
+        ansible_module, "passwordexpiration"
+    )
     if passwordexpiration is not None:
         if passwordexpiration[:-1] != "Z":
             passwordexpiration = passwordexpiration + "Z"
@@ -852,24 +1015,59 @@ def main():
 
     # Check parameters
 
-    if (names is None or len(names) < 1) and \
-       (users is None or len(users) < 1):
+    if (names is None or len(names) < 1) and (users is None or len(users) < 1):
         ansible_module.fail_json(msg="One of name and users is required")
 
     if state == "present":
         if names is not None and len(names) != 1:
             ansible_module.fail_json(
-                msg="Only one user can be added at a time using name.")
+                msg="Only one user can be added at a time using name."
+            )
 
     check_parameters(
-        ansible_module, state, action,
-        first, last, fullname, displayname, initials, homedir, shell, email,
-        principal, principalexpiration, passwordexpiration, password, random,
-        uid, gid, city, phone, mobile, pager, fax, orgunit, title, manager,
-        carlicense, sshpubkey, userauthtype, userclass, radius, radiususer,
-        departmentnumber, employeenumber, employeetype, preferredlanguage,
-        certificate, certmapdata, noprivate, nomembers, preserve,
-        update_password)
+        ansible_module,
+        state,
+        action,
+        first,
+        last,
+        fullname,
+        displayname,
+        initials,
+        homedir,
+        shell,
+        email,
+        principal,
+        principalexpiration,
+        passwordexpiration,
+        password,
+        random,
+        uid,
+        gid,
+        city,
+        phone,
+        mobile,
+        pager,
+        fax,
+        orgunit,
+        title,
+        manager,
+        carlicense,
+        sshpubkey,
+        userauthtype,
+        userclass,
+        radius,
+        radiususer,
+        departmentnumber,
+        employeenumber,
+        employeetype,
+        preferredlanguage,
+        certificate,
+        certmapdata,
+        noprivate,
+        nomembers,
+        preserve,
+        update_password,
+    )
 
     # Use users if names is None
     if users is not None:
@@ -883,8 +1081,9 @@ def main():
     ccache_name = None
     try:
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
         api_connect()
 
         # Check version specific settings
@@ -957,16 +1156,49 @@ def main():
                 nomembers = user.get("nomembers")
 
                 check_parameters(
-                    ansible_module, state, action,
-                    first, last, fullname, displayname, initials, homedir,
-                    shell, email, principal, principalexpiration,
-                    passwordexpiration, password, random, uid, gid, city,
-                    phone, mobile, pager, fax, orgunit, title, manager,
-                    carlicense, sshpubkey, userauthtype, userclass, radius,
-                    radiususer, departmentnumber, employeenumber,
-                    employeetype, preferredlanguage, certificate,
-                    certmapdata, noprivate, nomembers, preserve,
-                    update_password)
+                    ansible_module,
+                    state,
+                    action,
+                    first,
+                    last,
+                    fullname,
+                    displayname,
+                    initials,
+                    homedir,
+                    shell,
+                    email,
+                    principal,
+                    principalexpiration,
+                    passwordexpiration,
+                    password,
+                    random,
+                    uid,
+                    gid,
+                    city,
+                    phone,
+                    mobile,
+                    pager,
+                    fax,
+                    orgunit,
+                    title,
+                    manager,
+                    carlicense,
+                    sshpubkey,
+                    userauthtype,
+                    userclass,
+                    radius,
+                    radiususer,
+                    departmentnumber,
+                    employeenumber,
+                    employeetype,
+                    preferredlanguage,
+                    certificate,
+                    certmapdata,
+                    noprivate,
+                    nomembers,
+                    preserve,
+                    update_password,
+                )
 
                 # Extend email addresses
 
@@ -975,33 +1207,39 @@ def main():
             elif isinstance(user, str) or isinstance(user, unicode):
                 name = user
             else:
-                ansible_module.fail_json(msg="User '%s' is not valid" %
-                                         repr(user))
+                ansible_module.fail_json(
+                    msg="User '%s' is not valid" % repr(user)
+                )
 
             # Fix principals: add realm if missing
             # We need the connected API for the realm, therefore it can not
             # be part of check_parameters as this is used also before the
             # connection to the API has been established.
             if principal is not None:
-                principal = [x if "@" in x else x + "@" + server_realm
-                             for x in principal]
+                principal = [
+                    x if "@" in x else x + "@" + server_realm
+                    for x in principal
+                ]
 
             # Check passwordexpiration availability.
             # We need the connected API for this test, therefore it can not
             # be part of check_parameters as this is used also before the
             # connection to the API has been established.
-            if passwordexpiration is not None and \
-               not api_check_param("user_add", "krbpasswordexpiration"):
+            if passwordexpiration is not None and not api_check_param(
+                "user_add", "krbpasswordexpiration"
+            ):
                 ansible_module.fail_json(
                     msg="The use of passwordexpiration is not supported by "
-                    "your IPA version")
+                    "your IPA version"
+                )
 
             # Make sure user exists
             res_find = find_user(ansible_module, name)
             # Also search for preserved user if the user could not be found
             if res_find is None:
-                res_find_preserved = find_user(ansible_module, name,
-                                               preserved=True)
+                res_find_preserved = find_user(
+                    ansible_module, name, preserved=True
+                )
             else:
                 res_find_preserved = None
 
@@ -1009,13 +1247,42 @@ def main():
             if state == "present":
                 # Generate args
                 args = gen_args(
-                    first, last, fullname, displayname, initials, homedir,
-                    shell, email, principalexpiration, passwordexpiration,
-                    password, random, uid, gid, city, userstate, postalcode,
-                    phone, mobile, pager, fax, orgunit, title, carlicense,
-                    sshpubkey, userauthtype, userclass, radius, radiususer,
-                    departmentnumber, employeenumber, employeetype,
-                    preferredlanguage, noprivate, nomembers)
+                    first,
+                    last,
+                    fullname,
+                    displayname,
+                    initials,
+                    homedir,
+                    shell,
+                    email,
+                    principalexpiration,
+                    passwordexpiration,
+                    password,
+                    random,
+                    uid,
+                    gid,
+                    city,
+                    userstate,
+                    postalcode,
+                    phone,
+                    mobile,
+                    pager,
+                    fax,
+                    orgunit,
+                    title,
+                    carlicense,
+                    sshpubkey,
+                    userauthtype,
+                    userclass,
+                    radius,
+                    radiususer,
+                    departmentnumber,
+                    employeenumber,
+                    employeetype,
+                    preferredlanguage,
+                    noprivate,
+                    nomembers,
+                )
 
                 # Also check preserved users
                 if res_find is None and res_find_preserved is not None:
@@ -1036,26 +1303,29 @@ def main():
 
                         # Ignore userauthtype if it is empty (for resetting)
                         # and not set in for the user
-                        if "ipauserauthtype" not in res_find and \
-                           "ipauserauthtype" in args and \
-                           args["ipauserauthtype"] == ['']:
+                        if (
+                            "ipauserauthtype" not in res_find
+                            and "ipauserauthtype" in args
+                            and args["ipauserauthtype"] == [""]
+                        ):
                             del args["ipauserauthtype"]
 
                         # For all settings is args, check if there are
                         # different settings in the find result.
                         # If yes: modify
-                        if not compare_args_ipa(ansible_module, args,
-                                                res_find):
+                        if not compare_args_ipa(
+                            ansible_module, args, res_find
+                        ):
                             commands.append([name, "user_mod", args])
 
                     else:
                         # Make sure we have a first and last name
                         if first is None:
                             ansible_module.fail_json(
-                                msg="First name is needed")
+                                msg="First name is needed"
+                            )
                         if last is None:
-                            ansible_module.fail_json(
-                                msg="Last name is needed")
+                            ansible_module.fail_json(msg="Last name is needed")
 
                         commands.append([name, "user_add", args])
 
@@ -1064,17 +1334,21 @@ def main():
                     if res_find is not None:
                         # Generate addition and removal lists
                         manager_add = list(
-                            set(manager or []) -
-                            set(res_find.get("manager", [])))
+                            set(manager or [])
+                            - set(res_find.get("manager", []))
+                        )
                         manager_del = list(
-                            set(res_find.get("manager", [])) -
-                            set(manager or []))
+                            set(res_find.get("manager", []))
+                            - set(manager or [])
+                        )
                         principal_add = list(
-                            set(principal or []) -
-                            set(res_find.get("krbprincipalname", [])))
+                            set(principal or [])
+                            - set(res_find.get("krbprincipalname", []))
+                        )
                         principal_del = list(
-                            set(res_find.get("krbprincipalname", [])) -
-                            set(principal or []))
+                            set(res_find.get("krbprincipalname", []))
+                            - set(principal or [])
+                        )
 
                         # Principals are not returned as utf8 for IPA using
                         # python2 using user_find, therefore we need to
@@ -1082,17 +1356,21 @@ def main():
                         principal_del = [to_text(x) for x in principal_del]
 
                         certificate_add = list(
-                            set(certificate or []) -
-                            set(res_find.get("certificate", [])))
+                            set(certificate or [])
+                            - set(res_find.get("certificate", []))
+                        )
                         certificate_del = list(
-                            set(res_find.get("certificate", [])) -
-                            set(certificate or []))
+                            set(res_find.get("certificate", []))
+                            - set(certificate or [])
+                        )
                         certmapdata_add = list(
-                            set(certmapdata or []) -
-                            set(res_find.get("ipaCertMapData", [])))
+                            set(certmapdata or [])
+                            - set(res_find.get("ipaCertMapData", []))
+                        )
                         certmapdata_del = list(
-                            set(res_find.get("ipaCertMapData", [])) -
-                            set(certmapdata or []))
+                            set(res_find.get("ipaCertMapData", []))
+                            - set(certmapdata or [])
+                        )
 
                     else:
                         # Use given managers and principals
@@ -1112,16 +1390,18 @@ def main():
 
                     # Add managers
                     if len(manager_add) > 0:
-                        commands.append([name, "user_add_manager",
-                                         {
-                                             "user": manager_add,
-                                         }])
+                        commands.append(
+                            [name, "user_add_manager", {"user": manager_add,}]
+                        )
                     # Remove managers
                     if len(manager_del) > 0:
-                        commands.append([name, "user_remove_manager",
-                                         {
-                                             "user": manager_del,
-                                         }])
+                        commands.append(
+                            [
+                                name,
+                                "user_remove_manager",
+                                {"user": manager_del,},
+                            ]
+                        )
 
                     # Principals need to be added and removed one by one,
                     # because if entry already exists, the processing of
@@ -1131,19 +1411,23 @@ def main():
                     # Add principals
                     if len(principal_add) > 0:
                         for _principal in principal_add:
-                            commands.append([name, "user_add_principal",
-                                             {
-                                                 "krbprincipalname":
-                                                 _principal,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_add_principal",
+                                    {"krbprincipalname": _principal,},
+                                ]
+                            )
                     # Remove principals
                     if len(principal_del) > 0:
                         for _principal in principal_del:
-                            commands.append([name, "user_remove_principal",
-                                             {
-                                                 "krbprincipalname":
-                                                 _principal,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_remove_principal",
+                                    {"krbprincipalname": _principal,},
+                                ]
+                            )
 
                     # Certificates need to be added and removed one by one,
                     # because if entry already exists, the processing of
@@ -1153,19 +1437,23 @@ def main():
                     # Add certificates
                     if len(certificate_add) > 0:
                         for _certificate in certificate_add:
-                            commands.append([name, "user_add_cert",
-                                             {
-                                                 "usercertificate":
-                                                 _certificate,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_add_cert",
+                                    {"usercertificate": _certificate,},
+                                ]
+                            )
                     # Remove certificates
                     if len(certificate_del) > 0:
                         for _certificate in certificate_del:
-                            commands.append([name, "user_remove_cert",
-                                             {
-                                                 "usercertificate":
-                                                 _certificate,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_remove_cert",
+                                    {"usercertificate": _certificate,},
+                                ]
+                            )
 
                     # certmapdata need to be added and removed one by one,
                     # because issuer and subject can only be done one by
@@ -1174,25 +1462,33 @@ def main():
                     # Add certmapdata
                     if len(certmapdata_add) > 0:
                         for _data in certmapdata_add:
-                            commands.append([name, "user_add_certmapdata",
-                                             gen_certmapdata_args(_data)])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_add_certmapdata",
+                                    gen_certmapdata_args(_data),
+                                ]
+                            )
                     # Remove certmapdata
                     if len(certmapdata_del) > 0:
                         for _data in certmapdata_del:
-                            commands.append([name, "user_add_certmapdata",
-                                             gen_certmapdata_args(_data)])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_add_certmapdata",
+                                    gen_certmapdata_args(_data),
+                                ]
+                            )
 
                 elif action == "member":
                     if res_find is None:
-                        ansible_module.fail_json(
-                            msg="No user '%s'" % name)
+                        ansible_module.fail_json(msg="No user '%s'" % name)
 
                     # Ensure managers are present
                     if manager is not None and len(manager) > 0:
-                        commands.append([name, "user_add_manager",
-                                         {
-                                             "user": manager,
-                                         }])
+                        commands.append(
+                            [name, "user_add_manager", {"user": manager,}]
+                        )
 
                     # Principals need to be added and removed one by one,
                     # because if entry already exists, the processing of
@@ -1202,11 +1498,13 @@ def main():
                     # Ensure principals are present
                     if principal is not None and len(principal) > 0:
                         for _principal in principal:
-                            commands.append([name, "user_add_principal",
-                                             {
-                                                 "krbprincipalname":
-                                                 _principal,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_add_principal",
+                                    {"krbprincipalname": _principal,},
+                                ]
+                            )
 
                     # Certificates need to be added and removed one by one,
                     # because if entry already exists, the processing of
@@ -1216,11 +1514,13 @@ def main():
                     # Ensure certificates are present
                     if certificate is not None and len(certificate) > 0:
                         for _certificate in certificate:
-                            commands.append([name, "user_add_cert",
-                                             {
-                                                 "usercertificate":
-                                                 _certificate,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_add_cert",
+                                    {"usercertificate": _certificate,},
+                                ]
+                            )
 
                     # certmapdata need to be added and removed one by one,
                     # because issuer and subject can only be done one by
@@ -1229,8 +1529,13 @@ def main():
                     # Ensure certmapdata are present
                     if certmapdata is not None and len(certmapdata) > 0:
                         for _data in certmapdata:
-                            commands.append([name, "user_add_certmapdata",
-                                             gen_certmapdata_args(_data)])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_add_certmapdata",
+                                    gen_certmapdata_args(_data),
+                                ]
+                            )
 
             elif state == "absent":
                 # Also check preserved users
@@ -1245,15 +1550,13 @@ def main():
                         commands.append([name, "user_del", args])
                 elif action == "member":
                     if res_find is None:
-                        ansible_module.fail_json(
-                            msg="No user '%s'" % name)
+                        ansible_module.fail_json(msg="No user '%s'" % name)
 
                     # Ensure managers are absent
                     if manager is not None and len(manager) > 0:
-                        commands.append([name, "user_remove_manager",
-                                         {
-                                             "user": manager,
-                                         }])
+                        commands.append(
+                            [name, "user_remove_manager", {"user": manager,}]
+                        )
 
                     # Principals need to be added and removed one by one,
                     # because if entry already exists, the processing of
@@ -1262,10 +1565,13 @@ def main():
 
                     # Ensure principals are absent
                     if principal is not None and len(principal) > 0:
-                        commands.append([name, "user_remove_principal",
-                                         {
-                                             "krbprincipalname": principal,
-                                         }])
+                        commands.append(
+                            [
+                                name,
+                                "user_remove_principal",
+                                {"krbprincipalname": principal,},
+                            ]
+                        )
 
                     # Certificates need to be added and removed one by one,
                     # because if entry already exists, the processing of
@@ -1275,11 +1581,13 @@ def main():
                     # Ensure certificates are absent
                     if certificate is not None and len(certificate) > 0:
                         for _certificate in certificate:
-                            commands.append([name, "user_remove_cert",
-                                             {
-                                                 "usercertificate":
-                                                 _certificate,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_remove_cert",
+                                    {"usercertificate": _certificate,},
+                                ]
+                            )
 
                     # certmapdata need to be added and removed one by one,
                     # because issuer and subject can only be done one by
@@ -1290,8 +1598,13 @@ def main():
                         # Using issuer and subject can only be done one by
                         # one reliably (https://pagure.io/freeipa/issue/8097)
                         for _data in certmapdata:
-                            commands.append([name, "user_remove_certmapdata",
-                                             gen_certmapdata_args(_data)])
+                            commands.append(
+                                [
+                                    name,
+                                    "user_remove_certmapdata",
+                                    gen_certmapdata_args(_data),
+                                ]
+                            )
             elif state == "undeleted":
                 if res_find_preserved is not None:
                     commands.append([name, "user_undel", {}])
@@ -1324,33 +1637,37 @@ def main():
         errors = []
         for name, command, args in commands:
             try:
-                result = api_command(ansible_module, command, name,
-                                     args)
+                result = api_command(ansible_module, command, name, args)
                 if "completed" in result:
                     if result["completed"] > 0:
                         changed = True
                 else:
                     changed = True
 
-                if "random" in args and command in ["user_add", "user_mod"] \
-                   and "randompassword" in result["result"]:
+                if (
+                    "random" in args
+                    and command in ["user_add", "user_mod"]
+                    and "randompassword" in result["result"]
+                ):
                     if len(names) == 1:
-                        exit_args["randompassword"] = \
-                            result["result"]["randompassword"]
+                        exit_args["randompassword"] = result["result"][
+                            "randompassword"
+                        ]
                     else:
-                        exit_args.setdefault(name, {})["randompassword"] = \
-                            result["result"]["randompassword"]
+                        exit_args.setdefault(name, {})[
+                            "randompassword"
+                        ] = result["result"]["randompassword"]
 
             except Exception as e:
                 msg = str(e)
-                if "already contains" in msg \
-                   or "does not contain" in msg:
+                if "already contains" in msg or "does not contain" in msg:
                     continue
                 #  The canonical principal name may not be removed
                 if "equal to the canonical principal name must" in msg:
                     continue
-                ansible_module.fail_json(msg="%s: %s: %s" % (command, name,
-                                                             msg))
+                ansible_module.fail_json(
+                    msg="%s: %s: %s" % (command, name, msg)
+                )
 
             # Get all errors
             # All "already a member" and "not a member" failures in the
@@ -1360,11 +1677,15 @@ def main():
                     failed_item = result["failed"][item]
                     for member_type in failed_item:
                         for member, failure in failed_item[member_type]:
-                            if "already a member" in failure \
-                               or "not a member" in failure:
+                            if (
+                                "already a member" in failure
+                                or "not a member" in failure
+                            ):
                                 continue
-                            errors.append("%s: %s %s: %s" % (
-                                command, member_type, member, failure))
+                            errors.append(
+                                "%s: %s %s: %s"
+                                % (command, member_type, member, failure)
+                            )
 
         if len(errors) > 0:
             ansible_module.fail_json(msg=", ".join(errors))

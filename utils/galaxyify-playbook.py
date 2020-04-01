@@ -3,8 +3,8 @@ import re
 
 
 def galaxify_playbook(playbook_in):
-    p1 = re.compile('(ipa.*:)$')
-    p2 = re.compile('(.*:) (ipa.*)$')
+    p1 = re.compile("(ipa.*:)$")
+    p2 = re.compile("(.*:) (ipa.*)$")
     lines = []
 
     with open(playbook_in) as in_f:
@@ -13,8 +13,9 @@ def galaxify_playbook(playbook_in):
         include_role = False
         for line in in_f:
             stripped = line.strip()
-            if stripped.startswith("- name:") or \
-               stripped.startswith("- block:"):
+            if stripped.startswith("- name:") or stripped.startswith(
+                "- block:"
+            ):
                 changeable = True
             elif stripped in ["set_fact:", "vars:"]:
                 changeable = False
@@ -22,14 +23,15 @@ def galaxify_playbook(playbook_in):
             elif stripped.startswith("include_role:"):
                 include_role = True
             elif include_role and stripped.startswith("name:"):
-                line = p2.sub(r'\1 freeipa.ansible_freeipa.\2', line)
+                line = p2.sub(r"\1 freeipa.ansible_freeipa.\2", line)
                 changed = True
             elif changeable and stripped.startswith("- role:"):
-                line = p2.sub(r'\1 freeipa.ansible_freeipa.\2', line)
+                line = p2.sub(r"\1 freeipa.ansible_freeipa.\2", line)
                 changed = True
             elif changeable and not stripped.startswith(
-                    "freeipa.ansible_freeipa."):
-                line = p1.sub(r'freeipa.ansible_freeipa.\1', line)
+                "freeipa.ansible_freeipa."
+            ):
+                line = p1.sub(r"freeipa.ansible_freeipa.\1", line)
                 changed = True
 
             lines.append(line)

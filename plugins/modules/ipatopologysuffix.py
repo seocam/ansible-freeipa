@@ -70,8 +70,7 @@ def main():
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
             suffix=dict(choices=["domain", "ca"], required=True),
-            state=dict(type="str", default="verified",
-                       choices=["verified"]),
+            state=dict(type="str", default="verified", choices=["verified"]),
         ),
         supports_check_mode=True,
     )
@@ -99,8 +98,14 @@ def main():
 
     # Execute command
 
-    execute_api_command(ansible_module, ipaadmin_principal, ipaadmin_password,
-                        command, to_text(suffix), args)
+    execute_api_command(
+        ansible_module,
+        ipaadmin_principal,
+        ipaadmin_password,
+        command,
+        to_text(suffix),
+        args,
+    )
 
     # Done
 

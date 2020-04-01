@@ -230,9 +230,16 @@ RETURN = """
 
 import os
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, \
-    gen_add_del_lists, compare_args_ipa, module_params_get
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    gen_add_del_lists,
+    compare_args_ipa,
+    module_params_get,
+)
 from ipalib.errors import EmptyModlist
 
 
@@ -243,43 +250,50 @@ def find_vault(module, name, username, service, shared):
     }
 
     if username is not None:
-        _args['username'] = username
+        _args["username"] = username
     elif service is not None:
-        _args['service'] = service
+        _args["service"] = service
     else:
-        _args['shared'] = shared
+        _args["shared"] = shared
 
     _result = api_command(module, "vault_find", name, _args)
 
     if len(_result["result"]) > 1:
-        module.fail_json(
-            msg="There is more than one vault '%s'" % (name))
+        module.fail_json(msg="There is more than one vault '%s'" % (name))
     if len(_result["result"]) == 1:
         return _result["result"][0]
 
     return None
 
 
-def gen_args(description, username, service, shared, vault_type, salt,
-             public_key, vault_data):
+def gen_args(
+    description,
+    username,
+    service,
+    shared,
+    vault_type,
+    salt,
+    public_key,
+    vault_data,
+):
     _args = {}
 
     if description is not None:
-        _args['description'] = description
+        _args["description"] = description
     if username is not None:
-        _args['username'] = username
+        _args["username"] = username
     if service is not None:
-        _args['service'] = service
+        _args["service"] = service
     if shared is not None:
-        _args['shared'] = shared
+        _args["shared"] = shared
     if vault_type is not None:
-        _args['ipavaulttype'] = vault_type
+        _args["ipavaulttype"] = vault_type
     if salt is not None:
-        _args['ipavaultsalt'] = salt
+        _args["ipavaultsalt"] = salt
     if public_key is not None:
-        _args['ipavaultpublickey'] = public_key
+        _args["ipavaultpublickey"] = public_key
     if vault_data is not None:
-        _args['data'] = vault_data.encode('utf-8')
+        _args["data"] = vault_data.encode("utf-8")
 
     return _args
 
@@ -287,13 +301,17 @@ def gen_args(description, username, service, shared, vault_type, salt,
 def gen_member_args(args, users, groups):
     _args = args.copy()
 
-    for arg in ['ipavaulttype', 'description', 'ipavaultpublickey',
-                'ipavaultsalt']:
+    for arg in [
+        "ipavaulttype",
+        "description",
+        "ipavaultpublickey",
+        "ipavaultsalt",
+    ]:
         if arg in _args:
             del _args[arg]
 
-    _args['user'] = users
-    _args['group'] = groups
+    _args["user"] = users
+    _args["group"] = groups
 
     return _args
 
@@ -301,62 +319,91 @@ def gen_member_args(args, users, groups):
 def data_storage_args(args, data, password):
     _args = {}
 
-    if 'username' in args:
-        _args['username'] = args['username']
-    if 'service' in args:
-        _args['service'] = args['service']
-    if 'shared' in args:
-        _args['shared'] = args['shared']
+    if "username" in args:
+        _args["username"] = args["username"]
+    if "service" in args:
+        _args["service"] = args["service"]
+    if "shared" in args:
+        _args["shared"] = args["shared"]
 
     if password is not None:
-        _args['password'] = password
+        _args["password"] = password
 
-    _args['data'] = data
+    _args["data"] = data
 
     return _args
 
 
-def check_parameters(module, state, action, description, username, service,
-                     shared, users, groups, owners, ownergroups, vault_type,
-                     salt, password, public_key, vault_data):
+def check_parameters(
+    module,
+    state,
+    action,
+    description,
+    username,
+    service,
+    shared,
+    users,
+    groups,
+    owners,
+    ownergroups,
+    vault_type,
+    salt,
+    password,
+    public_key,
+    vault_data,
+):
     invalid = []
     if state == "present":
         if action == "member":
-            invalid = ['description', 'public_key', 'salt']
+            invalid = ["description", "public_key", "salt"]
 
         for param in invalid:
             if vars()[param] is not None:
                 module.fail_json(
-                    msg="Argument '%s' can not be used with action '%s'" %
-                    (param, action))
+                    msg="Argument '%s' can not be used with action '%s'"
+                    % (param, action)
+                )
 
     elif state == "absent":
-        invalid = ['description', 'salt']
+        invalid = ["description", "salt"]
 
         if action == "vault":
-            invalid.extend(['users', 'groups', 'owners', 'ownergroups',
-                            'password', 'public_key'])
+            invalid.extend(
+                [
+                    "users",
+                    "groups",
+                    "owners",
+                    "ownergroups",
+                    "password",
+                    "public_key",
+                ]
+            )
 
         for arg in invalid:
             if vars()[arg] is not None:
                 module.fail_json(
-                    msg="Argument '%s' can not be used with action '%s'" %
-                    (arg, state))
+                    msg="Argument '%s' can not be used with action '%s'"
+                    % (arg, state)
+                )
 
 
-def check_encryption_params(module, state, vault_type, password, public_key,
-                            vault_data, res_find):
+def check_encryption_params(
+    module, state, vault_type, password, public_key, vault_data, res_find
+):
     if state == "present":
         if vault_type == "symmetric":
-            if password is None \
-               and (vault_data is not None or res_find is None):
+            if password is None and (
+                vault_data is not None or res_find is None
+            ):
                 module.fail_json(
-                    msg="Vault password required for symmetric vault.")
+                    msg="Vault password required for symmetric vault."
+                )
 
         if vault_type == "asymmetric":
             if public_key is None and res_find is None:
                 module.fail_json(
-                    msg="Public Key required for asymmetric vault.")
+                    msg="Public Key required for asymmetric vault."
+                )
 
 
 def main():
@@ -365,51 +412,73 @@ def main():
             # generalgroups
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
-
-            name=dict(type="list", aliases=["cn"], default=None,
-                      required=True),
-
+            name=dict(
+                type="list", aliases=["cn"], default=None, required=True
+            ),
             # present
-
             description=dict(required=False, type="str", default=None),
-            vault_type=dict(type="str", aliases=["ipavaulttype"],
-                            default=None, required=False,
-                            choices=["standard", "symmetric", "asymmetric"]),
-            vault_public_key=dict(type="str", required=False, default=None,
-                                  aliases=['ipavaultpublickey']),
-            vault_salt=dict(type="str", required=False, default=None,
-                            aliases=['ipavaultsalt']),
-            username=dict(type="str", required=False, default=None,
-                          aliases=['user']),
+            vault_type=dict(
+                type="str",
+                aliases=["ipavaulttype"],
+                default=None,
+                required=False,
+                choices=["standard", "symmetric", "asymmetric"],
+            ),
+            vault_public_key=dict(
+                type="str",
+                required=False,
+                default=None,
+                aliases=["ipavaultpublickey"],
+            ),
+            vault_salt=dict(
+                type="str",
+                required=False,
+                default=None,
+                aliases=["ipavaultsalt"],
+            ),
+            username=dict(
+                type="str", required=False, default=None, aliases=["user"]
+            ),
             service=dict(type="str", required=False, default=None),
             shared=dict(type="bool", required=False, default=None),
-
-            users=dict(required=False, type='list', default=None),
-            groups=dict(required=False, type='list', default=None),
-            owners=dict(required=False, type='list', default=None),
-            ownergroups=dict(required=False, type='list', default=None),
-
-            vault_data=dict(type="str", required=False, default=None,
-                            aliases=['ipavaultdata']),
-            vault_password=dict(type="str", required=False, default=None,
-                                no_log=True, aliases=['ipavaultpassword']),
-
+            users=dict(required=False, type="list", default=None),
+            groups=dict(required=False, type="list", default=None),
+            owners=dict(required=False, type="list", default=None),
+            ownergroups=dict(required=False, type="list", default=None),
+            vault_data=dict(
+                type="str",
+                required=False,
+                default=None,
+                aliases=["ipavaultdata"],
+            ),
+            vault_password=dict(
+                type="str",
+                required=False,
+                default=None,
+                no_log=True,
+                aliases=["ipavaultpassword"],
+            ),
             # state
-            action=dict(type="str", default="vault",
-                        choices=["vault", "data", "member"]),
-            state=dict(type="str", default="present",
-                       choices=["present", "absent"]),
+            action=dict(
+                type="str",
+                default="vault",
+                choices=["vault", "data", "member"],
+            ),
+            state=dict(
+                type="str", default="present", choices=["present", "absent"]
+            ),
         ),
         supports_check_mode=True,
-        mutually_exclusive=[['username', 'service', 'shared']],
-        required_one_of=[['username', 'service', 'shared']]
+        mutually_exclusive=[["username", "service", "shared"]],
+        required_one_of=[["username", "service", "shared"]],
     )
 
     ansible_module._ansible_debug = True
 
     # general
-    ipaadmin_principal = module_params_get(ansible_module,
-                                           "ipaadmin_principal")
+    ipaadmin_principal = module_params_get(
+        ansible_module, "ipaadmin_principal"
+    )
     ipaadmin_password = module_params_get(ansible_module, "ipaadmin_password")
     names = module_params_get(ansible_module, "name")
 
@@ -441,7 +510,8 @@ def main():
     if state == "present":
         if len(names) != 1:
             ansible_module.fail_json(
-                msg="Only one vault can be added at a time.")
+                msg="Only one vault can be added at a time."
+            )
 
     elif state == "absent":
         if len(names) < 1:
@@ -450,9 +520,24 @@ def main():
     else:
         ansible_module.fail_json(msg="Invalid state '%s'" % state)
 
-    check_parameters(ansible_module, state, action, description, username,
-                     service, shared, users, groups, owners, ownergroups,
-                     vault_type, salt, password, public_key, vault_data)
+    check_parameters(
+        ansible_module,
+        state,
+        action,
+        description,
+        username,
+        service,
+        shared,
+        users,
+        groups,
+        owners,
+        ownergroups,
+        vault_type,
+        salt,
+        password,
+        public_key,
+        vault_data,
+    )
     # Init
 
     changed = False
@@ -461,33 +546,50 @@ def main():
     ccache_name = None
     try:
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
 
-        api_connect(context='ansible-freeipa')
+        api_connect(context="ansible-freeipa")
 
         commands = []
 
         for name in names:
             # Make sure vault exists
             res_find = find_vault(
-                ansible_module, name, username, service, shared)
+                ansible_module, name, username, service, shared
+            )
 
             # Generate args
-            args = gen_args(description, username, service, shared, vault_type,
-                            salt, public_key, vault_data)
+            args = gen_args(
+                description,
+                username,
+                service,
+                shared,
+                vault_type,
+                salt,
+                public_key,
+                vault_data,
+            )
 
             # Set default vault_type if needed.
             if vault_type is None and vault_data is not None:
                 if res_find is not None:
-                    res_vault_type = res_find.get('ipavaulttype')[0]
-                    args['ipavaulttype'] = vault_type = res_vault_type
+                    res_vault_type = res_find.get("ipavaulttype")[0]
+                    args["ipavaulttype"] = vault_type = res_vault_type
                 else:
-                    args['ipavaulttype'] = vault_type = "symmetric"
+                    args["ipavaulttype"] = vault_type = "symmetric"
 
             # verify data encription args
-            check_encryption_params(ansible_module, state, vault_type,
-                                    password, public_key, vault_data, res_find)
+            check_encryption_params(
+                ansible_module,
+                state,
+                vault_type,
+                password,
+                public_key,
+                vault_data,
+                res_find,
+            )
 
             # Create command
             if state == "present":
@@ -498,80 +600,91 @@ def main():
                         # For all settings is args, check if there are
                         # different settings in the find result.
                         # If yes: modify
-                        if not compare_args_ipa(ansible_module, args,
-                                                res_find):
+                        if not compare_args_ipa(
+                            ansible_module, args, res_find
+                        ):
                             commands.append([name, "vault_mod_internal", args])
                     else:
-                        if 'ipavaultsault' not in args:
-                            args['ipavaultsalt'] = os.urandom(32)
+                        if "ipavaultsault" not in args:
+                            args["ipavaultsalt"] = os.urandom(32)
                         commands.append([name, "vault_add_internal", args])
                         # archive empty data to set password
                         pwdargs = data_storage_args(
-                            args, args.get('data', ''), password)
+                            args, args.get("data", ""), password
+                        )
                         commands.append([name, "vault_archive", pwdargs])
 
                         # Set res_find to empty dict for next step  # noqa
                         res_find = {}
 
                     # Generate adittion and removal lists
-                    user_add, user_del = \
-                        gen_add_del_lists(users,
-                                          res_find.get('member_user', []))
-                    group_add, group_del = \
-                        gen_add_del_lists(groups,
-                                          res_find.get('member_group', []))
-                    owner_add, owner_del = \
-                        gen_add_del_lists(owners,
-                                          res_find.get('owner_user', []))
-                    ownergroups_add, ownergroups_del = \
-                        gen_add_del_lists(ownergroups,
-                                          res_find.get('owner_group', []))
+                    user_add, user_del = gen_add_del_lists(
+                        users, res_find.get("member_user", [])
+                    )
+                    group_add, group_del = gen_add_del_lists(
+                        groups, res_find.get("member_group", [])
+                    )
+                    owner_add, owner_del = gen_add_del_lists(
+                        owners, res_find.get("owner_user", [])
+                    )
+                    ownergroups_add, ownergroups_del = gen_add_del_lists(
+                        ownergroups, res_find.get("owner_group", [])
+                    )
 
                     # Add users and groups
                     if len(user_add) > 0 or len(group_add) > 0:
-                        user_add_args = gen_member_args(args, user_add,
-                                                        group_add)
-                        commands.append([name, 'vault_add_member',
-                                         user_add_args])
+                        user_add_args = gen_member_args(
+                            args, user_add, group_add
+                        )
+                        commands.append(
+                            [name, "vault_add_member", user_add_args]
+                        )
 
                     # Remove users and groups
                     if len(user_del) > 0 or len(group_del) > 0:
-                        user_del_args = gen_member_args(args, user_del,
-                                                        group_del)
-                        commands.append([name, 'vault_remove_member',
-                                         user_del_args])
+                        user_del_args = gen_member_args(
+                            args, user_del, group_del
+                        )
+                        commands.append(
+                            [name, "vault_remove_member", user_del_args]
+                        )
 
                     # Add owner users and groups
                     if len(user_add) > 0 or len(group_add) > 0:
-                        owner_add_args = gen_member_args(args, owner_add,
-                                                         ownergroups_add)
-                        commands.append([name, 'vault_add_owner',
-                                         owner_add_args])
+                        owner_add_args = gen_member_args(
+                            args, owner_add, ownergroups_add
+                        )
+                        commands.append(
+                            [name, "vault_add_owner", owner_add_args]
+                        )
 
                     # Remove owner users and groups
                     if len(user_del) > 0 or len(group_del) > 0:
-                        owner_del_args = gen_member_args(args, owner_del,
-                                                         ownergroups_del)
-                        commands.append([name, 'vault_remove_owner',
-                                         owner_del_args])
+                        owner_del_args = gen_member_args(
+                            args, owner_del, ownergroups_del
+                        )
+                        commands.append(
+                            [name, "vault_remove_owner", owner_del_args]
+                        )
 
                 elif action in "member":
                     # Add users and groups
                     if users is not None or groups is not None:
                         user_args = gen_member_args(args, users, groups)
-                        commands.append([name, 'vault_add_member', user_args])
+                        commands.append([name, "vault_add_member", user_args])
                     if owners is not None or ownergroups is not None:
                         owner_args = gen_member_args(args, owners, ownergroups)
-                        commands.append([name, 'vault_add_owner', owner_args])
+                        commands.append([name, "vault_add_owner", owner_args])
 
                     if vault_data is not None:
                         data_args = data_storage_args(
-                            args, args.get('data', ''), password)
-                        commands.append([name, 'vault_archive', data_args])
+                            args, args.get("data", ""), password
+                        )
+                        commands.append([name, "vault_archive", data_args])
 
             elif state == "absent":
-                if 'ipavaulttype' in args:
-                    del args['ipavaulttype']
+                if "ipavaulttype" in args:
+                    del args["ipavaulttype"]
 
                 if action == "vault":
                     if res_find is not None:
@@ -581,17 +694,20 @@ def main():
                     # remove users and groups
                     if users is not None or groups is not None:
                         user_args = gen_member_args(args, users, groups)
-                        commands.append([name, 'vault_remove_member',
-                                         user_args])
+                        commands.append(
+                            [name, "vault_remove_member", user_args]
+                        )
 
                     if owners is not None or ownergroups is not None:
                         owner_args = gen_member_args(args, owners, ownergroups)
-                        commands.append([name, 'vault_remove_owner',
-                                         owner_args])
+                        commands.append(
+                            [name, "vault_remove_owner", owner_args]
+                        )
                 else:
                     ansible_module.fail_json(
-                        msg="Invalid action '%s' for state '%s'" %
-                        (action, state))
+                        msg="Invalid action '%s' for state '%s'"
+                        % (action, state)
+                    )
             else:
                 ansible_module.fail_json(msg="Unkown state '%s'" % state)
 
@@ -602,8 +718,8 @@ def main():
             try:
                 result = api_command(ansible_module, command, name, args)
 
-                if command == 'vault_archive':
-                    changed = 'Archived data into' in result['summary']
+                if command == "vault_archive":
+                    changed = "Archived data into" in result["summary"]
                 else:
                     if "completed" in result:
                         if result["completed"] > 0:
@@ -614,7 +730,8 @@ def main():
                 result = {}
             except Exception as exception:
                 ansible_module.fail_json(
-                    msg="%s: %s: %s" % (command, name, str(exception)))
+                    msg="%s: %s: %s" % (command, name, str(exception))
+                )
 
             # Get all errors
             # All "already a member" and "not a member" failures in the
@@ -624,11 +741,15 @@ def main():
                     failed_item = result["failed"][item]
                     for member_type in failed_item:
                         for member, failure in failed_item[member_type]:
-                            if "already a member" in failure \
-                               or "not a member" in failure:
+                            if (
+                                "already a member" in failure
+                                or "not a member" in failure
+                            ):
                                 continue
-                            errors.append("%s: %s %s: %s" % (
-                                command, member_type, member, failure))
+                            errors.append(
+                                "%s: %s %s: %s"
+                                % (command, member_type, member, failure)
+                            )
         if len(errors) > 0:
             ansible_module.fail_json(msg=", ".join(errors))
 

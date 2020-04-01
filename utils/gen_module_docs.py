@@ -25,8 +25,7 @@ param_docs = {
     "_update_hosts_file": "The installer _update_host_file setting",
     "sssd": "The installer sssd setting",
     "dnsok": "The installer dnsok setting",
-
-    "dm_password":  "Directory Manager password",
+    "dm_password": "Directory Manager password",
     "password": "Admin user kerberos password",
     "ip_addresses": "List of Master Server IP Addresses",
     "domain": "Primary DNS domain of the IPA deployment",
@@ -34,11 +33,11 @@ param_docs = {
     "hostname": "Fully qualified name of this host",
     "ca_cert_file": [
         "A CA certificate to use. Do not acquire the IPA CA certificate via",
-        "automated means"
+        "automated means",
     ],
     "ca_cert_files": [
         "List of files containing CA certificates for the service certificate",
-        "files"
+        "files",
     ],
     "no_host_dns": "Do not use DNS for hostname lookup during installation",
     "setup_adtrust": "Configure AD trust capability",
@@ -48,7 +47,7 @@ param_docs = {
     "force_join": "Force client enrollment even if already enrolled",
     "subject_base": [
         "The certificate subject base (default O=<realm-name>).",
-        "RDNs are in LDAP order (most specific RDN first)."
+        "RDNs are in LDAP order (most specific RDN first).",
     ],
     "server": "Fully qualified name of IPA server to enroll to",
     "dirman_password": "Directory Manager (master) password",
@@ -57,8 +56,8 @@ param_docs = {
     "external_ca": "External ca setting",
     "setup_adtrust": "Configure AD trust capability",
     "external_cert_files": [
-      "File containing the IPA CA certificate and the external CA certificate",
-      "chain"
+        "File containing the IPA CA certificate and the external CA certificate",
+        "chain",
     ],
     "reverse_zones": "The reverse DNS zones to use",
     "no_reverse": "Do not create new reverse DNS zone",
@@ -78,7 +77,7 @@ param_docs = {
     "hidden_replica": "Install a hidden replica",
     "dirsrv_config_file": [
         "The path to LDIF file that will be used to modify configuration of",
-        "dse.ldif during installation of the directory server instance"
+        "dse.ldif during installation of the directory server instance",
     ],
     "dirsrv_cert_files": [
         "Files containing the Directory Server SSL certificate and private key"
@@ -101,16 +100,14 @@ param_docs = {
     "dirsrv_pin": "The password to unlock the Directory Server private key",
     "http_pin": "The password to unlock the Apache Server private key",
     "pkinit_pin": "The password to unlock the Kerberos KDC private key",
-    "dirsrv_cert_name":
-        "Name of the Directory Server SSL certificate to install",
+    "dirsrv_cert_name": "Name of the Directory Server SSL certificate to install",
     "http_cert_name": "Name of the Apache Server SSL certificate to install",
     "pkinit_cert_name": "Name of the Kerberos KDC SSL certificate to install",
     "keytab": "Path to backed up keytab from previous enrollment",
     "mkhomedir": "Create home directories for users on their first login",
     "adtrust_netbios_name": "The adtrust netbios_name setting",
     "adtrust_reset_netbios_name": "The adtrust reset_netbios_name setting",
-    "zonemgr":
-        "DNS zone manager e-mail address. Defaults to hostmaster@DOMAIN",
+    "zonemgr": "DNS zone manager e-mail address. Defaults to hostmaster@DOMAIN",
     "ssh_trust_dns": "Configure OpenSSH client to trust DNS SSHFP records",
     "dns_ip_addresses": "The dns ip_addresses setting",
     "dns_reverse_zones": "The dns reverse_zones setting",
@@ -132,13 +129,11 @@ param_docs = {
     "debug": "Turn on extra debugging",
     "basedn": "The basedn of the IPA server (of the form dc=example,dc=com)",
     "allow_repair": [
-      "Allow repair of already joined hosts. Contrary to ipaclient_force_join",
-      "the host entry will not be changed on the server"
+        "Allow repair of already joined hosts. Contrary to ipaclient_force_join",
+        "the host entry will not be changed on the server",
     ],
     "backup": "File to backup",
-    "fqdn": [
-        "The fully-qualified hostname of the host to add/modify/remove"
-    ],
+    "fqdn": ["The fully-qualified hostname of the host to add/modify/remove"],
     "certificates": "A list of host certificates",
     "sshpubkey": "The SSH public key for the host",
     "ipaddress": "The IP address for the host",
@@ -150,7 +145,7 @@ param_docs = {
     "automount_location": "The automount location",
     "firefox_dir": [
         "Specify directory where Firefox is installed (for example",
-        "'/usr/lib/firefox')"
+        "'/usr/lib/firefox')",
     ],
     "client_domain": "Primary DNS domain of the IPA deployment",
     "nisdomain": "The NIS domain name",
@@ -158,24 +153,23 @@ param_docs = {
     "on_master": "Whether the configuration is done on the master or not",
     "enable_dns_updates": [
         "Configures the machine to attempt dns updates when the ip address",
-        "changes"
+        "changes",
     ],
     "all_ip_addresses": [
         "All routable IP addresses configured on any interface will be added",
-        "to DNS"
+        "to DNS",
     ],
     "request_cert": "Request certificate for the machine",
     "preserve_sssd": "Preserve old SSSD configuration if possible",
     "no_sudo": "Do not configure SSSD as data source for sudo",
-    "fixed_primary":
-        "Configure sssd to use fixed server as primary IPA server",
+    "fixed_primary": "Configure sssd to use fixed server as primary IPA server",
     "permit": "Disable access rules by default, permit all access",
     "no_krb5_offline_passwords": [
         "Configure SSSD not to store user password when the server is offline"
     ],
     "force_ntpd": [
         "Stop and disable any time&date synchronization services besides ntpd",
-        "Deprecated since 4.7"
+        "Deprecated since 4.7",
     ],
     "no_nisdomain": "Do not configure NIS domain name",
     "configure_firefox": "Configure Firefox to use IPA domain credentials",
@@ -206,7 +200,7 @@ def gen_module_docs(module_in):
             #     print("%s: Bad argument dict line '%s'" % (module_in,
             #                                                stripped))
             while ")," not in stripped and i < len(in_lines) - 1:
-                next_stripped = in_lines[i+1].strip()
+                next_stripped = in_lines[i + 1].strip()
                 if not next_stripped.startswith("# "):
                     stripped += next_stripped
                 i += 1
@@ -227,14 +221,15 @@ def gen_module_docs(module_in):
 
             if param not in param_docs:
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print("%s: param '%s' is not in param_docs" % (module_in,
-                                                               param))
+                print(
+                    "%s: param '%s' is not in param_docs" % (module_in, param)
+                )
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 sys.exit(1)
 
             # print("param: '%s', dict: '%s'" % (param, _dict))
 
-            opts = _dict.split(',')
+            opts = _dict.split(",")
             opts = [o.strip() for o in opts]
             required = False
             # no_log = False

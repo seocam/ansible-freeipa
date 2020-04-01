@@ -23,12 +23,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ANSIBLE_METADATA = {
-    'metadata_version': '1.0',
-    'supported_by': 'community',
-    'status': ['preview'],
+    "metadata_version": "1.0",
+    "supported_by": "community",
+    "status": ["preview"],
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: ipaclient_set_hostname
 short description: Backup and set hostname
@@ -40,36 +40,37 @@ options:
     required: no
 author:
     - Thomas Woerner
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 # Backup and set hostname
 - name: Backup and set hostname
   ipaclient_set_hostname:
     hostname: client1.example.com
-'''
+"""
 
-RETURN = '''
-'''
+RETURN = """
+"""
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.ansible_ipa_client import (
-    setup_logging, sysrestore, paths, tasks
+    setup_logging,
+    sysrestore,
+    paths,
+    tasks,
 )
 
 
 def main():
     module = AnsibleModule(
-        argument_spec=dict(
-            hostname=dict(required=True),
-        ),
+        argument_spec=dict(hostname=dict(required=True),),
         supports_check_mode=True,
     )
 
     module._ansible_debug = True
     setup_logging()
 
-    hostname = module.params.get('hostname')
+    hostname = module.params.get("hostname")
 
     fstore = sysrestore.FileStore(paths.IPA_CLIENT_SYSRESTORE)
     statestore = sysrestore.StateFile(paths.IPA_CLIENT_SYSRESTORE)
@@ -80,5 +81,5 @@ def main():
     module.exit_json(changed=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

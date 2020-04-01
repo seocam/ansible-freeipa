@@ -23,12 +23,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ANSIBLE_METADATA = {
-    'metadata_version': '1.0',
-    'supported_by': 'community',
-    'status': ['preview'],
+    "metadata_version": "1.0",
+    "supported_by": "community",
+    "status": ["preview"],
 }
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: ipaclient_fstore
 short description: Backup files using IPA client sysrestore
@@ -40,34 +40,32 @@ options:
     required: no
 author:
     - Thomas Woerner
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Backup /etc/krb5.conf
   ipaclient_fstore:
     backup: "/etc/krb5.conf"
-'''
+"""
 
-RETURN = '''
-'''
+RETURN = """
+"""
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.ansible_ipa_client import (
-    setup_logging, paths, sysrestore
+    setup_logging,
+    paths,
+    sysrestore,
 )
 
 
 def main():
-    module = AnsibleModule(
-        argument_spec=dict(
-            backup=dict(required=True),
-        ),
-    )
+    module = AnsibleModule(argument_spec=dict(backup=dict(required=True),),)
 
     module._ansible_debug = True
     setup_logging()
 
-    backup = module.params.get('backup')
+    backup = module.params.get("backup")
 
     fstore = sysrestore.FileStore(paths.IPA_CLIENT_SYSRESTORE)
     if not fstore.has_file(backup):
@@ -77,5 +75,5 @@ def main():
     module.exit_json(changed=False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -103,8 +103,14 @@ RETURN = """
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_text
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, compare_args_ipa
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    compare_args_ipa,
+)
 
 
 def find_hbacsvcgroup(module, name):
@@ -117,7 +123,8 @@ def find_hbacsvcgroup(module, name):
 
     if len(_result["result"]) > 1:
         module.fail_json(
-            msg="There is more than one hbacsvcgroup '%s'" % (name))
+            msg="There is more than one hbacsvcgroup '%s'" % (name)
+        )
     elif len(_result["result"]) == 1:
         return _result["result"][0]
     else:
@@ -148,18 +155,22 @@ def main():
             # general
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
-
-            name=dict(type="list", aliases=["cn"], default=None,
-                      required=True),
+            name=dict(
+                type="list", aliases=["cn"], default=None, required=True
+            ),
             # present
             description=dict(type="str", default=None),
-            nomembers=dict(required=False, type='bool', default=None),
-            hbacsvc=dict(required=False, type='list', default=None),
-            action=dict(type="str", default="hbacsvcgroup",
-                        choices=["member", "hbacsvcgroup"]),
+            nomembers=dict(required=False, type="bool", default=None),
+            hbacsvc=dict(required=False, type="list", default=None),
+            action=dict(
+                type="str",
+                default="hbacsvcgroup",
+                choices=["member", "hbacsvcgroup"],
+            ),
             # state
-            state=dict(type="str", default="present",
-                       choices=["present", "absent"]),
+            state=dict(
+                type="str", default="present", choices=["present", "absent"]
+            ),
         ),
         supports_check_mode=True,
     )
@@ -186,27 +197,29 @@ def main():
     if state == "present":
         if len(names) != 1:
             ansible_module.fail_json(
-                msg="Only one hbacsvcgroup can be added at a time.")
+                msg="Only one hbacsvcgroup can be added at a time."
+            )
         if action == "member":
             invalid = ["description", "nomembers"]
             for x in invalid:
                 if vars()[x] is not None:
                     ansible_module.fail_json(
                         msg="Argument '%s' can not be used with action "
-                        "'%s'" % (x, action))
+                        "'%s'" % (x, action)
+                    )
 
     if state == "absent":
         if len(names) < 1:
-            ansible_module.fail_json(
-                msg="No name given.")
+            ansible_module.fail_json(msg="No name given.")
         invalid = ["description", "nomembers"]
         if action == "hbacsvcgroup":
             invalid.extend(["hbacsvc"])
         for x in invalid:
             if vars()[x] is not None:
                 ansible_module.fail_json(
-                    msg="Argument '%s' can not be used with state '%s'" %
-                    (x, state))
+                    msg="Argument '%s' can not be used with state '%s'"
+                    % (x, state)
+                )
 
     # Init
 
@@ -216,8 +229,9 @@ def main():
     ccache_name = None
     try:
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
         api_connect()
 
         commands = []
@@ -237,8 +251,9 @@ def main():
                         # For all settings is args, check if there are
                         # different settings in the find result.
                         # If yes: modify
-                        if not compare_args_ipa(ansible_module, args,
-                                                res_find):
+                        if not compare_args_ipa(
+                            ansible_module, args, res_find
+                        ):
                             commands.append([name, "hbacsvcgroup_mod", args])
                     else:
                         commands.append([name, "hbacsvcgroup_add", args])
@@ -246,44 +261,59 @@ def main():
                         res_find = {}
 
                     member_args = gen_member_args(hbacsvc)
-                    if not compare_args_ipa(ansible_module, member_args,
-                                            res_find):
+                    if not compare_args_ipa(
+                        ansible_module, member_args, res_find
+                    ):
                         # Generate addition and removal lists
                         hbacsvc_add = list(
-                            set(hbacsvc or []) -
-                            set(res_find.get("member_hbacsvc", [])))
+                            set(hbacsvc or [])
+                            - set(res_find.get("member_hbacsvc", []))
+                        )
                         hbacsvc_del = list(
-                            set(res_find.get("member_hbacsvc", [])) -
-                            set(hbacsvc or []))
+                            set(res_find.get("member_hbacsvc", []))
+                            - set(hbacsvc or [])
+                        )
 
                         # Add members
                         if len(hbacsvc_add) > 0:
-                            commands.append([name, "hbacsvcgroup_add_member",
-                                             {
-                                                 "hbacsvc":
-                                                 [to_text(svc)
-                                                  for svc in hbacsvc_add],
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "hbacsvcgroup_add_member",
+                                    {
+                                        "hbacsvc": [
+                                            to_text(svc) for svc in hbacsvc_add
+                                        ],
+                                    },
+                                ]
+                            )
                         # Remove members
                         if len(hbacsvc_del) > 0:
-                            commands.append([name,
-                                             "hbacsvcgroup_remove_member",
-                                             {
-                                                 "hbacsvc":
-                                                 [to_text(svc)
-                                                  for svc in hbacsvc_del],
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "hbacsvcgroup_remove_member",
+                                    {
+                                        "hbacsvc": [
+                                            to_text(svc) for svc in hbacsvc_del
+                                        ],
+                                    },
+                                ]
+                            )
                 elif action == "member":
                     if res_find is None:
                         ansible_module.fail_json(
-                            msg="No hbacsvcgroup '%s'" % name)
+                            msg="No hbacsvcgroup '%s'" % name
+                        )
 
                     # Ensure members are present
-                    commands.append([name, "hbacsvcgroup_add_member",
-                                     {
-                                         "hbacsvc": [to_text(svc)
-                                                     for svc in hbacsvc],
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "hbacsvcgroup_add_member",
+                            {"hbacsvc": [to_text(svc) for svc in hbacsvc],},
+                        ]
+                    )
             elif state == "absent":
                 if action == "hbacsvcgroup":
                     if res_find is not None:
@@ -292,14 +322,17 @@ def main():
                 elif action == "member":
                     if res_find is None:
                         ansible_module.fail_json(
-                            msg="No hbacsvcgroup '%s'" % name)
+                            msg="No hbacsvcgroup '%s'" % name
+                        )
 
                     # Ensure members are absent
-                    commands.append([name, "hbacsvcgroup_remove_member",
-                                     {
-                                         "hbacsvc": [to_text(svc)
-                                                     for svc in hbacsvc],
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "hbacsvcgroup_remove_member",
+                            {"hbacsvc": [to_text(svc) for svc in hbacsvc],},
+                        ]
+                    )
             else:
                 ansible_module.fail_json(msg="Unkown state '%s'" % state)
 
@@ -307,16 +340,18 @@ def main():
         errors = []
         for name, command, args in commands:
             try:
-                result = api_command(ansible_module, command, to_text(name),
-                                     args)
+                result = api_command(
+                    ansible_module, command, to_text(name), args
+                )
                 if "completed" in result:
                     if result["completed"] > 0:
                         changed = True
                 else:
                     changed = True
             except Exception as e:
-                ansible_module.fail_json(msg="%s: %s: %s" % (command, name,
-                                                             str(e)))
+                ansible_module.fail_json(
+                    msg="%s: %s: %s" % (command, name, str(e))
+                )
             # Get all errors
             # All "already a member" and "not a member" failures in the
             # result are ignored. All others are reported.
@@ -324,10 +359,14 @@ def main():
                 failed = result["failed"]["member"]
                 for member_type in failed:
                     for member, failure in failed[member_type]:
-                        if "already a member" not in failure \
-                           and "not a member" not in failure:
-                            errors.append("%s: %s %s: %s" % (
-                                command, member_type, member, failure))
+                        if (
+                            "already a member" not in failure
+                            and "not a member" not in failure
+                        ):
+                            errors.append(
+                                "%s: %s %s: %s"
+                                % (command, member_type, member, failure)
+                            )
         if len(errors) > 0:
             ansible_module.fail_json(msg=", ".join(errors))
 

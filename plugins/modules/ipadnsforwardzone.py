@@ -27,7 +27,7 @@ ANSIBLE_METADATA = {
 }
 
 
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: ipa_dnsforwardzone
 author: chris procter
@@ -68,9 +68,9 @@ options:
     - Force DNS zone creation even if it will overlap with an existing zone.
     required: false
     default: false
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 # Ensure dns zone is present
 - ipadnsforwardzone:
     ipaadmin_password: MyPassword123
@@ -87,28 +87,32 @@ EXAMPLES = '''
     ipaadmin_password: MyPassword123
     name: example.com
     state: absent
-'''
+"""
 
-RETURN = '''
-'''
+RETURN = """
+"""
 
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, compare_args_ipa, \
-    module_params_get
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    compare_args_ipa,
+    module_params_get,
+)
 
 
 def find_dnsforwardzone(module, name):
-    _args = {
-        "all": True,
-        "idnsname": name
-    }
+    _args = {"all": True, "idnsname": name}
     _result = api_command(module, "dnsforwardzone_find", name, _args)
 
     if len(_result["result"]) > 1:
         module.fail_json(
-            msg="There is more than one dnsforwardzone '%s'" % (name))
+            msg="There is more than one dnsforwardzone '%s'" % (name)
+        )
     elif len(_result["result"]) == 1:
         return _result["result"][0]
     else:
@@ -134,19 +138,28 @@ def main():
             # general
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
-            name=dict(type="str", aliases=["cn"], default=None,
-                      required=True),
-            forwarders=dict(type='list', aliases=["idnsforwarders"],
-                            required=False),
-            forwardpolicy=dict(type='str', aliases=["idnsforwardpolicy"],
-                               required=False,
-                               choices=['only', 'first', 'none']),
-            skip_overlap_check=dict(type='bool', required=False),
-            action=dict(type="str", default="dnsforwardzone",
-                        choices=["member", "dnsforwardzone"]),
+            name=dict(type="str", aliases=["cn"], default=None, required=True),
+            forwarders=dict(
+                type="list", aliases=["idnsforwarders"], required=False
+            ),
+            forwardpolicy=dict(
+                type="str",
+                aliases=["idnsforwardpolicy"],
+                required=False,
+                choices=["only", "first", "none"],
+            ),
+            skip_overlap_check=dict(type="bool", required=False),
+            action=dict(
+                type="str",
+                default="dnsforwardzone",
+                choices=["member", "dnsforwardzone"],
+            ),
             # state
-            state=dict(type='str', default='present',
-                       choices=['present', 'absent', 'enabled', 'disabled']),
+            state=dict(
+                type="str",
+                default="present",
+                choices=["present", "absent", "enabled", "disabled"],
+            ),
         ),
         supports_check_mode=True,
     )
@@ -154,16 +167,17 @@ def main():
     ansible_module._ansible_debug = True
 
     # Get parameters
-    ipaadmin_principal = module_params_get(ansible_module,
-                                           "ipaadmin_principal")
-    ipaadmin_password = module_params_get(ansible_module,
-                                          "ipaadmin_password")
+    ipaadmin_principal = module_params_get(
+        ansible_module, "ipaadmin_principal"
+    )
+    ipaadmin_password = module_params_get(ansible_module, "ipaadmin_password")
     name = module_params_get(ansible_module, "name")
     action = module_params_get(ansible_module, "action")
     forwarders = module_params_get(ansible_module, "forwarders")
     forwardpolicy = module_params_get(ansible_module, "forwardpolicy")
-    skip_overlap_check = module_params_get(ansible_module,
-                                           "skip_overlap_check")
+    skip_overlap_check = module_params_get(
+        ansible_module, "skip_overlap_check"
+    )
     state = module_params_get(ansible_module, "state")
 
     # absent stae means delete if the action is NOT member but update if it is
@@ -187,7 +201,8 @@ def main():
             if vars()[x] is not None:
                 ansible_module.fail_json(
                     msg="Argument '%s' can not be used with action "
-                    "'%s'" % (x, action))
+                    "'%s'" % (x, action)
+                )
 
     changed = False
     exit_args = {}
@@ -203,8 +218,9 @@ def main():
         #             disabled (False) and do we care (IGNORE)
 
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
         api_connect()
 
         # Make sure forwardzone exists
@@ -213,8 +229,9 @@ def main():
         if existing_resource is None and operation == "update":
             # does not exist and is updating
             # trying to update something that doesn't exist, so error
-            ansible_module.fail_json(msg="""dnsforwardzone '%s' is not
-                                                     valid""" % (name))
+            ansible_module.fail_json(
+                msg="dnsforwardzone '%s' is not valid" % name
+            )
         elif existing_resource is None and operation == "del":
             # does not exists and should be absent
             # set command
@@ -241,15 +258,16 @@ def main():
             # calculate the new forwarders and mod
             # determine args
             if state != "absent":
-                forwarders = list(set(existing_resource["idnsforwarders"]
-                                      + forwarders))
+                forwarders = list(
+                    set(existing_resource["idnsforwarders"] + forwarders)
+                )
             else:
-                forwarders = list(set(existing_resource["idnsforwarders"])
-                                  - set(forwarders))
-            args = gen_args(forwarders, forwardpolicy,
-                            skip_overlap_check)
+                forwarders = list(
+                    set(existing_resource["idnsforwarders"]) - set(forwarders)
+                )
+            args = gen_args(forwarders, forwardpolicy, skip_overlap_check)
             if skip_overlap_check is not None:
-                del args['skip_overlap_check']
+                del args["skip_overlap_check"]
 
             # command
             if not compare_args_ipa(ansible_module, args, existing_resource):
@@ -263,8 +281,7 @@ def main():
         elif existing_resource is None and operation == "add":
             # does not exist but should be present
             # determine args
-            args = gen_args(forwarders, forwardpolicy,
-                            skip_overlap_check)
+            args = gen_args(forwarders, forwardpolicy, skip_overlap_check)
             # set command
             command = "dnsforwardzone_add"
             # enabled or disabled?
@@ -275,7 +292,7 @@ def main():
             # determine args
             args = gen_args(forwarders, forwardpolicy, skip_overlap_check)
             if skip_overlap_check is not None:
-                del args['skip_overlap_check']
+                del args["skip_overlap_check"]
 
             # set command
             if not compare_args_ipa(ansible_module, args, existing_resource):
@@ -294,12 +311,10 @@ def main():
         # does the enabled state match what we want (if we care)
         if is_enabled != "IGNORE":
             if wants_enable and is_enabled != "TRUE":
-                api_command(ansible_module, "dnsforwardzone_enable",
-                            name, {})
+                api_command(ansible_module, "dnsforwardzone_enable", name, {})
                 changed = True
             elif not wants_enable and is_enabled != "FALSE":
-                api_command(ansible_module, "dnsforwardzone_disable",
-                            name, {})
+                api_command(ansible_module, "dnsforwardzone_disable", name, {})
                 changed = True
 
     except Exception as e:

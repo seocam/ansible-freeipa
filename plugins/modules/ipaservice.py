@@ -213,10 +213,19 @@ RETURN = """
 """
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, compare_args_ipa, \
-    encode_certificate, gen_add_del_lists, module_params_get, to_text, \
-    api_check_param
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    compare_args_ipa,
+    encode_certificate,
+    gen_add_del_lists,
+    module_params_get,
+    to_text,
+    api_check_param,
+)
 
 
 def find_service(module, name):
@@ -227,37 +236,44 @@ def find_service(module, name):
     _result = api_command(module, "service_find", to_text(name), _args)
 
     if len(_result["result"]) > 1:
-        module.fail_json(
-            msg="There is more than one service '%s'" % (name))
+        module.fail_json(msg="There is more than one service '%s'" % (name))
     elif len(_result["result"]) == 1:
         _res = _result["result"][0]
         certs = _res.get("usercertificate")
         if certs is not None:
-            _res["usercertificate"] = [encode_certificate(cert) for
-                                       cert in certs]
+            _res["usercertificate"] = [
+                encode_certificate(cert) for cert in certs
+            ]
         return _res
     else:
         return None
 
 
-def gen_args(pac_type, auth_ind, skip_host_check, force, requires_pre_auth,
-             ok_as_delegate, ok_to_auth_as_delegate):
+def gen_args(
+    pac_type,
+    auth_ind,
+    skip_host_check,
+    force,
+    requires_pre_auth,
+    ok_as_delegate,
+    ok_to_auth_as_delegate,
+):
     _args = {}
 
     if pac_type is not None:
-        _args['ipakrbauthzdata'] = pac_type
+        _args["ipakrbauthzdata"] = pac_type
     if auth_ind is not None:
-        _args['krbprincipalauthind'] = auth_ind
+        _args["krbprincipalauthind"] = auth_ind
     if skip_host_check is not None:
-        _args['skip_host_check'] = (skip_host_check)
+        _args["skip_host_check"] = skip_host_check
     if force is not None:
-        _args['force'] = (force)
+        _args["force"] = force
     if requires_pre_auth is not None:
-        _args['ipakrbrequirespreauth'] = (requires_pre_auth)
+        _args["ipakrbrequirespreauth"] = requires_pre_auth
     if ok_as_delegate is not None:
-        _args['ipakrbokasdelegate'] = (ok_as_delegate)
+        _args["ipakrbokasdelegate"] = ok_as_delegate
     if ok_to_auth_as_delegate is not None:
-        _args['ipakrboktoauthasdelegate'] = (ok_to_auth_as_delegate)
+        _args["ipakrboktoauthasdelegate"] = ok_to_auth_as_delegate
 
     return _args
 
@@ -266,37 +282,51 @@ def check_parameters(module, state, action, names, parameters):
     assert isinstance(parameters, dict)
 
     # invalid parameters for everything but state 'present', action 'service'.
-    invalid = ['pac_type', 'auth_ind', 'skip_host_check',
-               'force', 'requires_pre_auth', 'ok_as_delegate',
-               'ok_to_auth_as_delegate']
+    invalid = [
+        "pac_type",
+        "auth_ind",
+        "skip_host_check",
+        "force",
+        "requires_pre_auth",
+        "ok_as_delegate",
+        "ok_to_auth_as_delegate",
+    ]
 
     # invalid parameters when not handling service members.
-    invalid_not_member = \
-        ['principal', 'certificate', 'host', 'allow_create_keytab_user',
-         'allow_create_keytab_group', 'allow_create_keytab_host',
-         'allow_create_keytab_hostgroup', 'allow_retrieve_keytab_user',
-         'allow_retrieve_keytab_group', 'allow_retrieve_keytab_host',
-         'allow_retrieve_keytab_hostgroup']
+    invalid_not_member = [
+        "principal",
+        "certificate",
+        "host",
+        "allow_create_keytab_user",
+        "allow_create_keytab_group",
+        "allow_create_keytab_host",
+        "allow_create_keytab_hostgroup",
+        "allow_retrieve_keytab_user",
+        "allow_retrieve_keytab_group",
+        "allow_retrieve_keytab_host",
+        "allow_retrieve_keytab_hostgroup",
+    ]
 
-    if state == 'present':
+    if state == "present":
         if len(names) != 1:
             module.fail_json(msg="Only one service can be added at a time.")
 
-        if action == 'service':
+        if action == "service":
             invalid = []
 
-    elif state == 'absent':
+    elif state == "absent":
         if len(names) < 1:
             module.fail_json(msg="No name given.")
 
         if action == "service":
             invalid.extend(invalid_not_member)
 
-    elif state == 'disabled':
+    elif state == "disabled":
         invalid.extend(invalid_not_member)
         if action != "service":
             module.fail_json(
-                msg="Invalid action '%s' for state '%s'" % (action, state))
+                msg="Invalid action '%s' for state '%s'" % (action, state)
+            )
 
     else:
         module.fail_json(msg="Invalid state '%s'" % (state))
@@ -304,8 +334,9 @@ def check_parameters(module, state, action, names, parameters):
     for _invalid in invalid:
         if parameters[_invalid] is not None:
             module.fail_json(
-                msg="Argument '%s' can not be used with state '%s'" %
-                (_invalid, state))
+                msg="Argument '%s' can not be used with state '%s'"
+                % (_invalid, state)
+            )
 
 
 def init_ansible_module():
@@ -314,58 +345,89 @@ def init_ansible_module():
             # general
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
-
-            name=dict(type="list", aliases=["service"], default=None,
-                      required=True),
+            name=dict(
+                type="list", aliases=["service"], default=None, required=True
+            ),
             # service attributesstr
-            certificate=dict(type="list", aliases=['usercertificate'],
-                             default=None, required=False),
-            principal=dict(type="list", aliases=["krbprincipalname"],
-                           default=None),
-            pac_type=dict(type="list", aliases=["ipakrbauthzdata"],
-                          choices=["MS-PAC", "PAD", "NONE"]),
-            auth_ind=dict(type="str",
-                          aliases=["krbprincipalauthind"],
-                          choices=["otp", "radius", "pkinit", "hardened"]),
+            certificate=dict(
+                type="list",
+                aliases=["usercertificate"],
+                default=None,
+                required=False,
+            ),
+            principal=dict(
+                type="list", aliases=["krbprincipalname"], default=None
+            ),
+            pac_type=dict(
+                type="list",
+                aliases=["ipakrbauthzdata"],
+                choices=["MS-PAC", "PAD", "NONE"],
+            ),
+            auth_ind=dict(
+                type="str",
+                aliases=["krbprincipalauthind"],
+                choices=["otp", "radius", "pkinit", "hardened"],
+            ),
             skip_host_check=dict(type="bool"),
             force=dict(type="bool"),
             requires_pre_auth=dict(
-                type="bool", aliases=["ipakrbrequirespreauth"]),
+                type="bool", aliases=["ipakrbrequirespreauth"]
+            ),
             ok_as_delegate=dict(type="bool", aliases=["ipakrbokasdelegate"]),
-            ok_to_auth_as_delegate=dict(type="bool",
-                                        aliases=["ipakrboktoauthasdelegate"]),
+            ok_to_auth_as_delegate=dict(
+                type="bool", aliases=["ipakrboktoauthasdelegate"]
+            ),
             host=dict(type="list", aliases=["managedby_host"], required=False),
             allow_create_keytab_user=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_write_keys_user']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_write_keys_user"],
+            ),
             allow_retrieve_keytab_user=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_read_keys_user']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_read_keys_user"],
+            ),
             allow_create_keytab_group=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_write_keys_group']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_write_keys_group"],
+            ),
             allow_retrieve_keytab_group=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_read_keys_group']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_read_keys_group"],
+            ),
             allow_create_keytab_host=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_write_keys_host']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_write_keys_host"],
+            ),
             allow_retrieve_keytab_host=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_read_keys_host']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_read_keys_host"],
+            ),
             allow_create_keytab_hostgroup=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_write_keys_hostgroup']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_write_keys_hostgroup"],
+            ),
             allow_retrieve_keytab_hostgroup=dict(
-                type="list", required=False,
-                aliases=['ipaallowedtoperform_read_keys_hostgroup']),
+                type="list",
+                required=False,
+                aliases=["ipaallowedtoperform_read_keys_hostgroup"],
+            ),
             # action
-            action=dict(type="str", default="service",
-                        choices=["member", "service"]),
+            action=dict(
+                type="str", default="service", choices=["member", "service"]
+            ),
             # state
-            state=dict(type="str", default="present",
-                       choices=["present", "absent",
-                                "enabled", "disabled"]),
+            state=dict(
+                type="str",
+                default="present",
+                choices=["present", "absent", "enabled", "disabled"],
+            ),
         ),
         supports_check_mode=True,
     )
@@ -381,8 +443,9 @@ def main():
     # Get parameters
 
     # general
-    ipaadmin_principal = module_params_get(ansible_module,
-                                           "ipaadmin_principal")
+    ipaadmin_principal = module_params_get(
+        ansible_module, "ipaadmin_principal"
+    )
     ipaadmin_password = module_params_get(ansible_module, "ipaadmin_password")
     names = module_params_get(ansible_module, "name")
 
@@ -395,28 +458,37 @@ def main():
     force = module_params_get(ansible_module, "force")
     requires_pre_auth = module_params_get(ansible_module, "requires_pre_auth")
     ok_as_delegate = module_params_get(ansible_module, "ok_as_delegate")
-    ok_to_auth_as_delegate = module_params_get(ansible_module,
-                                               "ok_to_auth_as_delegate")
+    ok_to_auth_as_delegate = module_params_get(
+        ansible_module, "ok_to_auth_as_delegate"
+    )
 
     host = module_params_get(ansible_module, "host")
 
     allow_create_keytab_user = module_params_get(
-        ansible_module, "allow_create_keytab_user")
+        ansible_module, "allow_create_keytab_user"
+    )
     allow_create_keytab_group = module_params_get(
-        ansible_module, "allow_create_keytab_group")
+        ansible_module, "allow_create_keytab_group"
+    )
     allow_create_keytab_host = module_params_get(
-        ansible_module, "allow_create_keytab_host")
+        ansible_module, "allow_create_keytab_host"
+    )
     allow_create_keytab_hostgroup = module_params_get(
-        ansible_module, "allow_create_keytab_hostgroup")
+        ansible_module, "allow_create_keytab_hostgroup"
+    )
 
     allow_retrieve_keytab_user = module_params_get(
-        ansible_module, "allow_retrieve_keytab_user")
+        ansible_module, "allow_retrieve_keytab_user"
+    )
     allow_retrieve_keytab_group = module_params_get(
-        ansible_module, "allow_retrieve_keytab_group")
+        ansible_module, "allow_retrieve_keytab_group"
+    )
     allow_retrieve_keytab_host = module_params_get(
-        ansible_module, "allow_create_keytab_host")
+        ansible_module, "allow_create_keytab_host"
+    )
     allow_retrieve_keytab_hostgroup = module_params_get(
-        ansible_module, "allow_retrieve_keytab_hostgroup")
+        ansible_module, "allow_retrieve_keytab_hostgroup"
+    )
 
     # action
     action = module_params_get(ansible_module, "action")
@@ -434,15 +506,16 @@ def main():
     ccache_name = None
     try:
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
         api_connect()
 
-        has_skip_host_check = api_check_param(
-            "service_add", "skip_host_check")
+        has_skip_host_check = api_check_param("service_add", "skip_host_check")
         if skip_host_check and not has_skip_host_check:
             ansible_module.fail_json(
-                msg="Skipping host check is not supported by your IPA version")
+                msg="Skipping host check is not supported by your IPA version"
+            )
 
         commands = []
 
@@ -452,14 +525,19 @@ def main():
             if state == "present":
                 if action == "service":
                     args = gen_args(
-                        pac_type, auth_ind, skip_host_check, force,
-                        requires_pre_auth, ok_as_delegate,
-                        ok_to_auth_as_delegate)
-                    if not has_skip_host_check and 'skip_host_check' in args:
-                        del args['skip_host_check']
+                        pac_type,
+                        auth_ind,
+                        skip_host_check,
+                        force,
+                        requires_pre_auth,
+                        ok_as_delegate,
+                        ok_to_auth_as_delegate,
+                    )
+                    if not has_skip_host_check and "skip_host_check" in args:
+                        del args["skip_host_check"]
 
                     if res_find is None:
-                        commands.append([name, 'service_add', args])
+                        commands.append([name, "service_add", args])
 
                         certificate_add = certificate or []
                         certificate_del = []
@@ -467,239 +545,317 @@ def main():
                         host_del = []
                         principal_add = principal or []
                         principal_del = []
-                        allow_create_keytab_user_add = \
+                        allow_create_keytab_user_add = (
                             allow_create_keytab_user or []
+                        )
                         allow_create_keytab_user_del = []
-                        allow_create_keytab_group_add = \
+                        allow_create_keytab_group_add = (
                             allow_create_keytab_group or []
+                        )
                         allow_create_keytab_group_del = []
-                        allow_create_keytab_host_add = \
+                        allow_create_keytab_host_add = (
                             allow_create_keytab_host or []
+                        )
                         allow_create_keytab_host_del = []
-                        allow_create_keytab_hostgroup_add = \
+                        allow_create_keytab_hostgroup_add = (
                             allow_create_keytab_hostgroup or []
+                        )
                         allow_create_keytab_hostgroup_del = []
-                        allow_retrieve_keytab_user_add = \
+                        allow_retrieve_keytab_user_add = (
                             allow_retrieve_keytab_user or []
+                        )
                         allow_retrieve_keytab_user_del = []
-                        allow_retrieve_keytab_group_add = \
+                        allow_retrieve_keytab_group_add = (
                             allow_retrieve_keytab_group or []
+                        )
                         allow_retrieve_keytab_group_del = []
-                        allow_retrieve_keytab_host_add = \
+                        allow_retrieve_keytab_host_add = (
                             allow_retrieve_keytab_host or []
+                        )
                         allow_retrieve_keytab_host_del = []
-                        allow_retrieve_keytab_hostgroup_add = \
+                        allow_retrieve_keytab_hostgroup_add = (
                             allow_retrieve_keytab_hostgroup or []
+                        )
                         allow_retrieve_keytab_hostgroup_del = []
 
                     else:
-                        for remove in ['skip_host_check', 'force']:
+                        for remove in ["skip_host_check", "force"]:
                             if remove in args:
                                 del args[remove]
 
-                        if not compare_args_ipa(ansible_module, args,
-                                                res_find):
+                        if not compare_args_ipa(
+                            ansible_module, args, res_find
+                        ):
                             commands.append([name, "service_mod", args])
 
                         certificate_add, certificate_del = gen_add_del_lists(
-                            certificate, res_find.get("usercertificate"))
+                            certificate, res_find.get("usercertificate")
+                        )
 
                         host_add, host_del = gen_add_del_lists(
-                            host, res_find.get('managedby_host', []))
+                            host, res_find.get("managedby_host", [])
+                        )
 
                         principal_add, principal_del = gen_add_del_lists(
-                            principal, res_find.get("principal"))
+                            principal, res_find.get("principal")
+                        )
 
-                        (allow_create_keytab_user_add,
-                         allow_create_keytab_user_del) = \
-                            gen_add_del_lists(
-                                allow_create_keytab_user, res_find.get(
-                                    'ipaallowedtoperform_write_keys_user',
-                                    []))
-                        (allow_retrieve_keytab_user_add,
-                         allow_retrieve_keytab_user_del) = \
-                            gen_add_del_lists(
-                                allow_retrieve_keytab_user, res_find.get(
-                                    'ipaallowedtoperform_read_keys_user',
-                                    []))
-                        (allow_create_keytab_group_add,
-                         allow_create_keytab_group_del) = \
-                            gen_add_del_lists(
-                                allow_create_keytab_group, res_find.get(
-                                    'ipaallowedtoperform_write_keys_group',
-                                    []))
-                        (allow_retrieve_keytab_group_add,
-                         allow_retrieve_keytab_group_del) = \
-                            gen_add_del_lists(
-                                allow_retrieve_keytab_group,
-                                res_find.get(
-                                    'ipaallowedtoperform_read_keys_group',
-                                    []))
-                        (allow_create_keytab_host_add,
-                         allow_create_keytab_host_del) = \
-                            gen_add_del_lists(
-                                allow_create_keytab_host,
-                                res_find.get(
-                                    'ipaallowedtoperform_write_keys_host',
-                                    []))
-                        (allow_retrieve_keytab_host_add,
-                         allow_retrieve_keytab_host_del) = \
-                            gen_add_del_lists(
-                                allow_retrieve_keytab_host,
-                                res_find.get(
-                                    'ipaallowedtoperform_read_keys_host',
-                                    []))
-                        (allow_create_keytab_hostgroup_add,
-                         allow_create_keytab_hostgroup_del) = \
-                            gen_add_del_lists(
-                                allow_create_keytab_hostgroup,
-                                res_find.get(
-                                    'ipaallowedtoperform_write_keys_hostgroup',
-                                    []))
-                        (allow_retrieve_keytab_hostgroup_add,
-                         allow_retrieve_keytab_hostgroup_del) = \
-                            gen_add_del_lists(
-                                allow_retrieve_keytab_hostgroup,
-                                res_find.get(
-                                    'ipaallowedtoperform_read_keys_hostgroup',
-                                    []))
+                        (
+                            allow_create_keytab_user_add,
+                            allow_create_keytab_user_del,
+                        ) = gen_add_del_lists(
+                            allow_create_keytab_user,
+                            res_find.get(
+                                "ipaallowedtoperform_write_keys_user", []
+                            ),
+                        )
+                        (
+                            allow_retrieve_keytab_user_add,
+                            allow_retrieve_keytab_user_del,
+                        ) = gen_add_del_lists(
+                            allow_retrieve_keytab_user,
+                            res_find.get(
+                                "ipaallowedtoperform_read_keys_user", []
+                            ),
+                        )
+                        (
+                            allow_create_keytab_group_add,
+                            allow_create_keytab_group_del,
+                        ) = gen_add_del_lists(
+                            allow_create_keytab_group,
+                            res_find.get(
+                                "ipaallowedtoperform_write_keys_group", []
+                            ),
+                        )
+                        (
+                            allow_retrieve_keytab_group_add,
+                            allow_retrieve_keytab_group_del,
+                        ) = gen_add_del_lists(
+                            allow_retrieve_keytab_group,
+                            res_find.get(
+                                "ipaallowedtoperform_read_keys_group", []
+                            ),
+                        )
+                        (
+                            allow_create_keytab_host_add,
+                            allow_create_keytab_host_del,
+                        ) = gen_add_del_lists(
+                            allow_create_keytab_host,
+                            res_find.get(
+                                "ipaallowedtoperform_write_keys_host", []
+                            ),
+                        )
+                        (
+                            allow_retrieve_keytab_host_add,
+                            allow_retrieve_keytab_host_del,
+                        ) = gen_add_del_lists(
+                            allow_retrieve_keytab_host,
+                            res_find.get(
+                                "ipaallowedtoperform_read_keys_host", []
+                            ),
+                        )
+                        (
+                            allow_create_keytab_hostgroup_add,
+                            allow_create_keytab_hostgroup_del,
+                        ) = gen_add_del_lists(
+                            allow_create_keytab_hostgroup,
+                            res_find.get(
+                                "ipaallowedtoperform_write_keys_hostgroup", []
+                            ),
+                        )
+                        (
+                            allow_retrieve_keytab_hostgroup_add,
+                            allow_retrieve_keytab_hostgroup_del,
+                        ) = gen_add_del_lists(
+                            allow_retrieve_keytab_hostgroup,
+                            res_find.get(
+                                "ipaallowedtoperform_read_keys_hostgroup", []
+                            ),
+                        )
 
                 elif action == "member":
                     if res_find is None:
                         ansible_module.fail_json(msg="No service '%s'" % name)
 
-                    existing = res_find.get('usercertificate', [])
+                    existing = res_find.get("usercertificate", [])
                     if certificate is None:
                         certificate_add = []
                     else:
-                        certificate_add = [c for c in certificate
-                                           if c not in existing]
+                        certificate_add = [
+                            c for c in certificate if c not in existing
+                        ]
                     certificate_del = []
                     host_add = host or []
                     host_del = []
                     principal_add = principal or []
                     principal_del = []
 
-                    allow_create_keytab_user_add = \
+                    allow_create_keytab_user_add = (
                         allow_create_keytab_user or []
+                    )
                     allow_create_keytab_user_del = []
-                    allow_create_keytab_group_add = \
+                    allow_create_keytab_group_add = (
                         allow_create_keytab_group or []
+                    )
                     allow_create_keytab_group_del = []
-                    allow_create_keytab_host_add = \
+                    allow_create_keytab_host_add = (
                         allow_create_keytab_host or []
+                    )
                     allow_create_keytab_host_del = []
-                    allow_create_keytab_hostgroup_add = \
+                    allow_create_keytab_hostgroup_add = (
                         allow_create_keytab_hostgroup or []
+                    )
                     allow_create_keytab_hostgroup_del = []
-                    allow_retrieve_keytab_user_add = \
+                    allow_retrieve_keytab_user_add = (
                         allow_retrieve_keytab_user or []
+                    )
                     allow_retrieve_keytab_user_del = []
-                    allow_retrieve_keytab_group_add = \
+                    allow_retrieve_keytab_group_add = (
                         allow_retrieve_keytab_group or []
+                    )
                     allow_retrieve_keytab_group_del = []
-                    allow_retrieve_keytab_host_add = \
+                    allow_retrieve_keytab_host_add = (
                         allow_retrieve_keytab_host or []
+                    )
                     allow_retrieve_keytab_host_del = []
-                    allow_retrieve_keytab_hostgroup_add = \
+                    allow_retrieve_keytab_hostgroup_add = (
                         allow_retrieve_keytab_hostgroup or []
+                    )
                     allow_retrieve_keytab_hostgroup_del = []
 
                 # Add principals
                 for _principal in principal_add:
-                    commands.append([name, "service_add_principal",
-                                     {
-                                         "krbprincipalname":
-                                         _principal,
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "service_add_principal",
+                            {"krbprincipalname": _principal,},
+                        ]
+                    )
 
                 # Remove principals
                 for _principal in principal_del:
-                    commands.append([name, "service_remove_principal",
-                                     {
-                                         "krbprincipalname":
-                                         _principal,
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "service_remove_principal",
+                            {"krbprincipalname": _principal,},
+                        ]
+                    )
 
                 for _certificate in certificate_add:
-                    commands.append([name, "service_add_cert",
-                                     {
-                                         "usercertificate":
-                                         _certificate,
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "service_add_cert",
+                            {"usercertificate": _certificate,},
+                        ]
+                    )
                 # Remove certificates
                 for _certificate in certificate_del:
-                    commands.append([name, "service_remove_cert",
-                                     {
-                                         "usercertificate":
-                                         _certificate,
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "service_remove_cert",
+                            {"usercertificate": _certificate,},
+                        ]
+                    )
 
                 # Add hosts.
                 if host is not None and len(host) > 0 and len(host_add) > 0:
-                    commands.append([name, "service_add_host",
-                                     {"host": host_add}])
+                    commands.append(
+                        [name, "service_add_host", {"host": host_add}]
+                    )
                 # Remove hosts
                 if host is not None and len(host) > 0 and len(host_del) > 0:
-                    commands.append([name, "service_remove_host",
-                                     {"host": host_del}])
+                    commands.append(
+                        [name, "service_remove_host", {"host": host_del}]
+                    )
 
                 # Allow create keytab
-                if len(allow_create_keytab_user_add) > 0 or \
-                   len(allow_create_keytab_group_add) > 0 or \
-                   len(allow_create_keytab_host_add) > 0 or \
-                   len(allow_create_keytab_hostgroup_add) > 0:
+                if (
+                    len(allow_create_keytab_user_add) > 0
+                    or len(allow_create_keytab_group_add) > 0
+                    or len(allow_create_keytab_host_add) > 0
+                    or len(allow_create_keytab_hostgroup_add) > 0
+                ):
                     commands.append(
-                        [name, "service_allow_create_keytab",
-                         {'user': allow_create_keytab_user_add,
-                          'group': allow_create_keytab_group_add,
-                          'host': allow_create_keytab_host_add,
-                          'hostgroup': allow_create_keytab_hostgroup_add
-                          }])
+                        [
+                            name,
+                            "service_allow_create_keytab",
+                            {
+                                "user": allow_create_keytab_user_add,
+                                "group": allow_create_keytab_group_add,
+                                "host": allow_create_keytab_host_add,
+                                "hostgroup": allow_create_keytab_hostgroup_add,
+                            },
+                        ]
+                    )
 
                 # Disallow create keytab
-                if len(allow_create_keytab_user_del) > 0 or \
-                   len(allow_create_keytab_group_del) > 0 or \
-                   len(allow_create_keytab_host_del) > 0 or \
-                   len(allow_create_keytab_hostgroup_del) > 0:
+                if (
+                    len(allow_create_keytab_user_del) > 0
+                    or len(allow_create_keytab_group_del) > 0
+                    or len(allow_create_keytab_host_del) > 0
+                    or len(allow_create_keytab_hostgroup_del) > 0
+                ):
                     commands.append(
-                        [name, "service_disallow_create_keytab",
-                         {'user': allow_create_keytab_user_del,
-                          'group': allow_create_keytab_group_del,
-                          'host': allow_create_keytab_host_del,
-                          'hostgroup': allow_create_keytab_hostgroup_del
-                          }])
+                        [
+                            name,
+                            "service_disallow_create_keytab",
+                            {
+                                "user": allow_create_keytab_user_del,
+                                "group": allow_create_keytab_group_del,
+                                "host": allow_create_keytab_host_del,
+                                "hostgroup": allow_create_keytab_hostgroup_del,
+                            },
+                        ]
+                    )
 
                 # Allow retrieve keytab
-                if len(allow_retrieve_keytab_user_add) > 0 or \
-                   len(allow_retrieve_keytab_group_add) > 0 or \
-                   len(allow_retrieve_keytab_hostgroup_add) > 0 or \
-                   len(allow_retrieve_keytab_hostgroup_add) > 0:
+                if (
+                    len(allow_retrieve_keytab_user_add) > 0
+                    or len(allow_retrieve_keytab_group_add) > 0
+                    or len(allow_retrieve_keytab_hostgroup_add) > 0
+                    or len(allow_retrieve_keytab_hostgroup_add) > 0
+                ):
                     commands.append(
-                        [name, "service_allow_retrieve_keytab",
-                         {'user': allow_retrieve_keytab_user_add,
-                          'group': allow_retrieve_keytab_group_add,
-                          'host': allow_retrieve_keytab_host_add,
-                          'hostgroup': allow_retrieve_keytab_hostgroup_add
-                          }])
+                        [
+                            name,
+                            "service_allow_retrieve_keytab",
+                            {
+                                "user": allow_retrieve_keytab_user_add,
+                                "group": allow_retrieve_keytab_group_add,
+                                "host": allow_retrieve_keytab_host_add,
+                                "hostgroup": allow_retrieve_keytab_hostgroup_add,
+                            },
+                        ]
+                    )
 
                 # Disllow retrieve keytab
-                if len(allow_retrieve_keytab_user_del) > 0 or \
-                   len(allow_retrieve_keytab_group_del) > 0 or \
-                   len(allow_retrieve_keytab_host_del) > 0 or \
-                   len(allow_retrieve_keytab_hostgroup_del) > 0:
+                if (
+                    len(allow_retrieve_keytab_user_del) > 0
+                    or len(allow_retrieve_keytab_group_del) > 0
+                    or len(allow_retrieve_keytab_host_del) > 0
+                    or len(allow_retrieve_keytab_hostgroup_del) > 0
+                ):
                     commands.append(
-                        [name, "service_disallow_retrieve_keytab",
-                         {'user': allow_retrieve_keytab_user_del,
-                          'group': allow_retrieve_keytab_group_del,
-                          'host': allow_retrieve_keytab_host_del,
-                          'hostgroup': allow_retrieve_keytab_hostgroup_del
-                          }])
+                        [
+                            name,
+                            "service_disallow_retrieve_keytab",
+                            {
+                                "user": allow_retrieve_keytab_user_del,
+                                "group": allow_retrieve_keytab_group_del,
+                                "host": allow_retrieve_keytab_host_del,
+                                "hostgroup": allow_retrieve_keytab_hostgroup_del,
+                            },
+                        ]
+                    )
 
             elif state == "absent":
                 if action == "service":
                     if res_find is not None:
-                        commands.append([name, 'service_del', {}])
+                        commands.append([name, "service_del", {}])
 
                 elif action == "member":
                     if res_find is None:
@@ -708,62 +864,84 @@ def main():
                     # Remove principals
                     if principal is not None:
                         for _principal in principal:
-                            commands.append([name, "service_remove_principal",
-                                             {
-                                                 "krbprincipalname":
-                                                 _principal,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "service_remove_principal",
+                                    {"krbprincipalname": _principal,},
+                                ]
+                            )
                     # Remove certificates
                     if certificate is not None:
-                        existing = res_find.get('usercertificate', [])
+                        existing = res_find.get("usercertificate", [])
                         for _certificate in certificate:
                             if _certificate in existing:
-                                commands.append([name, "service_remove_cert",
-                                                 {
-                                                     "usercertificate":
-                                                     _certificate,
-                                                 }])
+                                commands.append(
+                                    [
+                                        name,
+                                        "service_remove_cert",
+                                        {"usercertificate": _certificate,},
+                                    ]
+                                )
 
                     # Add hosts
                     if host is not None:
                         commands.append(
-                            [name, "service_remove_host", {"host": host}])
+                            [name, "service_remove_host", {"host": host}]
+                        )
 
                     # Allow create keytab
-                    if allow_create_keytab_user is not None or \
-                       allow_create_keytab_group is not None or \
-                       allow_create_keytab_host is not None or \
-                       allow_create_keytab_hostgroup is not None:
+                    if (
+                        allow_create_keytab_user is not None
+                        or allow_create_keytab_group is not None
+                        or allow_create_keytab_host is not None
+                        or allow_create_keytab_hostgroup is not None
+                    ):
                         commands.append(
-                            [name, "service_disallow_create_keytab",
-                             {'user': allow_create_keytab_user,
-                              'group': allow_create_keytab_group,
-                              'host': allow_create_keytab_host,
-                              'hostgroup': allow_create_keytab_hostgroup
-                              }])
+                            [
+                                name,
+                                "service_disallow_create_keytab",
+                                {
+                                    "user": allow_create_keytab_user,
+                                    "group": allow_create_keytab_group,
+                                    "host": allow_create_keytab_host,
+                                    "hostgroup": allow_create_keytab_hostgroup,
+                                },
+                            ]
+                        )
 
                     # Allow retriev keytab
-                    if allow_retrieve_keytab_user is not None or \
-                       allow_retrieve_keytab_group is not None or \
-                       allow_retrieve_keytab_host is not None or \
-                       allow_retrieve_keytab_hostgroup is not None:
+                    if (
+                        allow_retrieve_keytab_user is not None
+                        or allow_retrieve_keytab_group is not None
+                        or allow_retrieve_keytab_host is not None
+                        or allow_retrieve_keytab_hostgroup is not None
+                    ):
                         commands.append(
-                            [name, "service_disallow_retrieve_keytab",
-                             {'user': allow_retrieve_keytab_user,
-                              'group': allow_retrieve_keytab_group,
-                              'host': allow_retrieve_keytab_host,
-                              'hostgroup': allow_retrieve_keytab_hostgroup
-                              }])
+                            [
+                                name,
+                                "service_disallow_retrieve_keytab",
+                                {
+                                    "user": allow_retrieve_keytab_user,
+                                    "group": allow_retrieve_keytab_group,
+                                    "host": allow_retrieve_keytab_host,
+                                    "hostgroup": allow_retrieve_keytab_hostgroup,
+                                },
+                            ]
+                        )
 
             elif state == "disabled":
                 if action == "service":
-                    if res_find is not None and \
-                       len(res_find.get('usercertificate', [])) > 0:
-                        commands.append([name, 'service_disable', {}])
+                    if (
+                        res_find is not None
+                        and len(res_find.get("usercertificate", [])) > 0
+                    ):
+                        commands.append([name, "service_disable", {}])
                 else:
                     ansible_module.fail_json(
-                        msg="Invalid action '%s' for state '%s'" %
-                        (action, state))
+                        msg="Invalid action '%s' for state '%s'"
+                        % (action, state)
+                    )
             else:
                 ansible_module.fail_json(msg="Unkown state '%s'" % state)
 
@@ -779,8 +957,9 @@ def main():
                 else:
                     changed = True
             except Exception as ex:
-                ansible_module.fail_json(msg="%s: %s: %s" % (command, name,
-                                                             str(ex)))
+                ansible_module.fail_json(
+                    msg="%s: %s: %s" % (command, name, str(ex))
+                )
             # Get all errors
             # All "already a member" and "not a member" failures in the
             # result are ignored. All others are reported.
@@ -789,11 +968,15 @@ def main():
                     failed_item = result["failed"][item]
                     for member_type in failed_item:
                         for member, failure in failed_item[member_type]:
-                            if "already a member" in failure \
-                               or "not a member" in failure:
+                            if (
+                                "already a member" in failure
+                                or "not a member" in failure
+                            ):
                                 continue
-                            errors.append("%s: %s %s: %s" % (
-                                command, member_type, member, failure))
+                            errors.append(
+                                "%s: %s %s: %s"
+                                % (command, member_type, member, failure)
+                            )
         if len(errors) > 0:
             ansible_module.fail_json(msg=", ".join(errors))
 

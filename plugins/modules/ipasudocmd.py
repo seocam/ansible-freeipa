@@ -73,8 +73,14 @@ RETURN = """
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_text
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, compare_args_ipa
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    compare_args_ipa,
+)
 
 
 def find_sudocmd(module, name):
@@ -86,8 +92,7 @@ def find_sudocmd(module, name):
     _result = api_command(module, "sudocmd_find", to_text(name), _args)
 
     if len(_result["result"]) > 1:
-        module.fail_json(
-            msg="There is more than one sudocmd '%s'" % (name))
+        module.fail_json(msg="There is more than one sudocmd '%s'" % (name))
     elif len(_result["result"]) == 1:
         return _result["result"][0]
     else:
@@ -108,14 +113,15 @@ def main():
             # general
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
-
-            name=dict(type="list", aliases=["sudocmd"], default=None,
-                      required=True),
+            name=dict(
+                type="list", aliases=["sudocmd"], default=None, required=True
+            ),
             # present
             description=dict(type="str", default=None),
             # state
-            state=dict(type="str", default="present",
-                       choices=["present", "absent"]),
+            state=dict(
+                type="str", default="present", choices=["present", "absent"]
+            ),
         ),
         supports_check_mode=True,
     )
@@ -140,8 +146,9 @@ def main():
         for x in invalid:
             if vars()[x] is not None:
                 ansible_module.fail_json(
-                    msg="Argument '%s' can not be used with state '%s'" %
-                    (x, state))
+                    msg="Argument '%s' can not be used with state '%s'"
+                    % (x, state)
+                )
 
     # Init
 
@@ -151,8 +158,9 @@ def main():
     ccache_name = None
     try:
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
         api_connect()
 
         commands = []
@@ -169,8 +177,7 @@ def main():
                     # For all settings in args, check if there are
                     # different settings in the find result.
                     # If yes: modify
-                    if not compare_args_ipa(ansible_module, args,
-                                            res_find):
+                    if not compare_args_ipa(ansible_module, args, res_find):
                         commands.append([name, "sudocmd_mod", args])
                 else:
                     commands.append([name, "sudocmd_add", args])
@@ -185,16 +192,18 @@ def main():
         # Execute commands
         for name, command, args in commands:
             try:
-                result = api_command(ansible_module, command, to_text(name),
-                                     args)
+                result = api_command(
+                    ansible_module, command, to_text(name), args
+                )
                 # Check if any changes were made by any command
-                if command == 'sudocmd_del':
-                    changed |= "Deleted" in result['summary']
-                elif command == 'sudocmd_add':
-                    changed |= "Added" in result['summary']
+                if command == "sudocmd_del":
+                    changed |= "Deleted" in result["summary"]
+                elif command == "sudocmd_add":
+                    changed |= "Added" in result["summary"]
             except Exception as e:
-                ansible_module.fail_json(msg="%s: %s: %s" % (command, name,
-                                                             str(e)))
+                ansible_module.fail_json(
+                    msg="%s: %s: %s" % (command, name, str(e))
+                )
 
     except Exception as e:
         ansible_module.fail_json(msg=str(e))

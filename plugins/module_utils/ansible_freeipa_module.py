@@ -68,20 +68,21 @@ def valid_creds(module, principal):  # noqa
     """
     if "KRB5CCNAME" in os.environ:
         ccache = os.environ["KRB5CCNAME"]
-        module.debug('KRB5CCNAME set to %s' % ccache)
+        module.debug("KRB5CCNAME set to %s" % ccache)
 
         try:
-            cred = gssapi.Credentials(usage='initiate',
-                                      store={'ccache': ccache})
+            cred = gssapi.Credentials(
+                usage="initiate", store={"ccache": ccache}
+            )
         except gssapi.raw.misc.GSSError as e:
-            module.fail_json(msg='Failed to find default ccache: %s' % e)
+            module.fail_json(msg="Failed to find default ccache: %s" % e)
         else:
             module.debug("Using principal %s" % str(cred.name))
             return True
 
     elif "KRB5_CLIENT_KTNAME" in os.environ:
-        keytab = os.environ.get('KRB5_CLIENT_KTNAME', None)
-        module.debug('KRB5_CLIENT_KTNAME set to %s' % keytab)
+        keytab = os.environ.get("KRB5_CLIENT_KTNAME", None)
+        module.debug("KRB5_CLIENT_KTNAME set to %s" % keytab)
 
         ccache_name = "MEMORY:%s" % str(uuid.uuid4())
         os.environ["KRB5CCNAME"] = ccache_name
@@ -89,15 +90,17 @@ def valid_creds(module, principal):  # noqa
         try:
             cred = kinit_keytab(principal, keytab, ccache_name)
         except gssapi.raw.misc.GSSError as e:
-            module.fail_json(msg='Kerberos authentication failed : %s' % e)
+            module.fail_json(msg="Kerberos authentication failed : %s" % e)
         else:
             module.debug("Using principal %s" % str(cred.name))
             return True
 
     creds = get_credentials_if_valid()
-    if creds and \
-       creds.lifetime > 0 and \
-       "%s@" % principal in creds.name.display_as(creds.name.name_type):
+    if (
+        creds
+        and creds.lifetime > 0
+        and "%s@" % principal in creds.name.display_as(creds.name.name_type)
+    ):
         return True
     return False
 
@@ -111,8 +114,8 @@ def temp_kinit(principal, password):
     if not principal:
         principal = "admin"
 
-    ccache_dir = tempfile.mkdtemp(prefix='krbcc')
-    ccache_name = os.path.join(ccache_dir, 'ccache')
+    ccache_dir = tempfile.mkdtemp(prefix="krbcc")
+    ccache_name = os.path.join(ccache_dir, "ccache")
 
     try:
         kinit_password(principal, password, ccache_name)
@@ -127,7 +130,7 @@ def temp_kdestroy(ccache_dir, ccache_name):
     Destroy temporary ticket and remove temporary ccache
     """
     if ccache_name is not None:
-        run([paths.KDESTROY, '-c', ccache_name], raiseonerr=False)
+        run([paths.KDESTROY, "-c", ccache_name], raiseonerr=False)
     if ccache_dir is not None:
         shutil.rmtree(ccache_dir, ignore_errors=True)
 
@@ -142,7 +145,7 @@ def api_connect(context=None):
 
     # available contexts are 'server', 'ansible-freeipa' and 'cli_installer'
     if context is None:
-        context = 'server'
+        context = "server"
 
     api.bootstrap(context=context, debug=env.debug, log=None)
     api.finalize()
@@ -200,11 +203,11 @@ def execute_api_command(module, principal, password, command, name, args):
 def date_format(value):
     accepted_date_formats = [
         LDAP_GENERALIZED_TIME_FORMAT,  # generalized time
-        '%Y-%m-%dT%H:%M:%SZ',  # ISO 8601, second precision
-        '%Y-%m-%dT%H:%MZ',     # ISO 8601, minute precision
-        '%Y-%m-%dZ',           # ISO 8601, date only
-        '%Y-%m-%d %H:%M:%SZ',  # non-ISO 8601, second precision
-        '%Y-%m-%d %H:%MZ',     # non-ISO 8601, minute precision
+        "%Y-%m-%dT%H:%M:%SZ",  # ISO 8601, second precision
+        "%Y-%m-%dT%H:%MZ",  # ISO 8601, minute precision
+        "%Y-%m-%dZ",  # ISO 8601, date only
+        "%Y-%m-%d %H:%M:%SZ",  # non-ISO 8601, second precision
+        "%Y-%m-%d %H:%MZ",  # non-ISO 8601, minute precision
     ]
 
     for date_format in accepted_date_formats:
@@ -320,7 +323,7 @@ def encode_certificate(cert):
     else:
         encoded = base64.b64encode(cert.public_bytes(Encoding.DER))
     if not six.PY2:
-        encoded = encoded.decode('ascii')
+        encoded = encoded.decode("ascii")
     return encoded
 
 

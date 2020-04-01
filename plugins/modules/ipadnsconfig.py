@@ -98,10 +98,20 @@ RETURN = """
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_text
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, \
-    api_command_no_name, compare_args_ipa, module_params_get, \
-    gen_add_del_lists, is_ipv4_addr, is_ipv6_addr, ipalib_errors
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    api_command_no_name,
+    compare_args_ipa,
+    module_params_get,
+    gen_add_del_lists,
+    is_ipv4_addr,
+    is_ipv6_addr,
+    ipalib_errors,
+)
 
 
 def find_dnsconfig(module):
@@ -112,109 +122,120 @@ def find_dnsconfig(module):
     _result = api_command_no_name(module, "dnsconfig_show", _args)
 
     if "result" in _result:
-        if _result["result"].get('idnsforwarders', None) is None:
-            _result["result"]['idnsforwarders'] = ['']
+        if _result["result"].get("idnsforwarders", None) is None:
+            _result["result"]["idnsforwarders"] = [""]
         return _result["result"]
     else:
         module.fail("Could not retrieve current DNS configuration.")
     return None
 
 
-def gen_args(module, state, dnsconfig, forwarders, forward_policy,
-             allow_sync_ptr):
+def gen_args(
+    module, state, dnsconfig, forwarders, forward_policy, allow_sync_ptr
+):
     _args = {}
 
     if forwarders:
         _forwarders = []
         for forwarder in forwarders:
-            ip_address = forwarder.get('ip_address')
-            port = forwarder.get('port')
+            ip_address = forwarder.get("ip_address")
+            port = forwarder.get("port")
             if not (is_ipv4_addr(ip_address) or is_ipv6_addr(ip_address)):
                 module.fail(
-                    msg="Invalid IP for DNS forwarder: %s" % ip_address)
+                    msg="Invalid IP for DNS forwarder: %s" % ip_address
+                )
             if port is None:
                 _forwarders.append(ip_address)
             else:
-                _forwarders.append('%s port %d' % (ip_address, port))
+                _forwarders.append("%s port %d" % (ip_address, port))
 
-        global_forwarders = dnsconfig.get('idnsforwarders', [])
-        if state == 'absent':
-            _args['idnsforwarders'] = [
-                fwd for fwd in global_forwarders if fwd not in _forwarders]
+        global_forwarders = dnsconfig.get("idnsforwarders", [])
+        if state == "absent":
+            _args["idnsforwarders"] = [
+                fwd for fwd in global_forwarders if fwd not in _forwarders
+            ]
             # When all forwarders should be excluded, use an empty string ('').
-            if not _args['idnsforwarders']:
-                _args['idnsforwarders'] = ['']
+            if not _args["idnsforwarders"]:
+                _args["idnsforwarders"] = [""]
 
-        elif state == 'present':
-            _args['idnsforwarders'] = [
-                fwd for fwd in _forwarders if fwd not in global_forwarders]
+        elif state == "present":
+            _args["idnsforwarders"] = [
+                fwd for fwd in _forwarders if fwd not in global_forwarders
+            ]
             # If no forwarders should be added, remove argument.
-            if not _args['idnsforwarders']:
-                del _args['idnsforwarders']
+            if not _args["idnsforwarders"]:
+                del _args["idnsforwarders"]
 
         else:
             # shouldn't happen, but let's be paranoid.
             module.fail(msg="Invalid state: %s" % state)
 
     if forward_policy is not None:
-        _args['idnsforwardpolicy'] = forward_policy
+        _args["idnsforwardpolicy"] = forward_policy
 
     if allow_sync_ptr is not None:
-        _args['idnsallowsyncptr'] = 'TRUE' if allow_sync_ptr else 'FALSE'
+        _args["idnsallowsyncptr"] = "TRUE" if allow_sync_ptr else "FALSE"
 
     return _args
 
 
 def main():
     forwarder_spec = dict(
-       ip_address=dict(type=str, required=True),
-       port=dict(type=int, required=False, default=None)
+        ip_address=dict(type=str, required=True),
+        port=dict(type=int, required=False, default=None),
     )
 
     ansible_module = AnsibleModule(
-       argument_spec=dict(
-           # general
-           ipaadmin_principal=dict(type='str', default='admin'),
-           ipaadmin_password=dict(type='str', no_log=True),
-
-           # dnsconfig
-           forwarders=dict(type='list', default=None, required=False,
-                           options=dict(**forwarder_spec)),
-           forward_policy=dict(type='str', required=False, default=None,
-                               choices=['only', 'first', 'none']),
-           allow_sync_ptr=dict(type='bool', required=False, default=None),
-
-           # general
-           state=dict(type="str", default="present",
-                      choices=["present", "absent"]),
-
-       )
+        argument_spec=dict(
+            # general
+            ipaadmin_principal=dict(type="str", default="admin"),
+            ipaadmin_password=dict(type="str", no_log=True),
+            # dnsconfig
+            forwarders=dict(
+                type="list",
+                default=None,
+                required=False,
+                options=dict(**forwarder_spec),
+            ),
+            forward_policy=dict(
+                type="str",
+                required=False,
+                default=None,
+                choices=["only", "first", "none"],
+            ),
+            allow_sync_ptr=dict(type="bool", required=False, default=None),
+            # general
+            state=dict(
+                type="str", default="present", choices=["present", "absent"]
+            ),
+        )
     )
 
     ansible_module._ansible_debug = True
 
     # general
-    ipaadmin_principal = module_params_get(ansible_module,
-                                           "ipaadmin_principal")
-    ipaadmin_password = module_params_get(ansible_module,
-                                          "ipaadmin_password")
+    ipaadmin_principal = module_params_get(
+        ansible_module, "ipaadmin_principal"
+    )
+    ipaadmin_password = module_params_get(ansible_module, "ipaadmin_password")
 
-    forwarders = module_params_get(ansible_module, 'forwarders') or []
-    forward_policy = module_params_get(ansible_module, 'forward_policy')
-    allow_sync_ptr = module_params_get(ansible_module, 'allow_sync_ptr')
+    forwarders = module_params_get(ansible_module, "forwarders") or []
+    forward_policy = module_params_get(ansible_module, "forward_policy")
+    allow_sync_ptr = module_params_get(ansible_module, "allow_sync_ptr")
 
-    state = module_params_get(ansible_module, 'state')
+    state = module_params_get(ansible_module, "state")
 
     # Check parameters.
     invalid = []
-    if state == 'absent':
-        invalid = ['forward_policy', 'allow_sync_ptr']
+    if state == "absent":
+        invalid = ["forward_policy", "allow_sync_ptr"]
 
     for x in invalid:
         if vars()[x] is not None:
             ansible_module.fail_json(
-                msg="Argument '%s' can not be used with state '%s'" %
-                (x, state))
+                msg="Argument '%s' can not be used with state '%s'"
+                % (x, state)
+            )
 
     # Init
 
@@ -223,18 +244,25 @@ def main():
     ccache_name = None
     try:
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
         api_connect()
 
         res_find = find_dnsconfig(ansible_module)
-        args = gen_args(ansible_module, state, res_find, forwarders,
-                        forward_policy, allow_sync_ptr)
+        args = gen_args(
+            ansible_module,
+            state,
+            res_find,
+            forwarders,
+            forward_policy,
+            allow_sync_ptr,
+        )
 
         # Execute command only if configuration changes.
         if not compare_args_ipa(ansible_module, args, res_find):
             try:
-                api_command_no_name(ansible_module, 'dnsconfig_mod', args)
+                api_command_no_name(ansible_module, "dnsconfig_mod", args)
                 # If command did not fail, something changed.
                 changed = True
 

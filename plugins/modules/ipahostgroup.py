@@ -115,9 +115,15 @@ RETURN = """
 """
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.ansible_freeipa_module import temp_kinit, \
-    temp_kdestroy, valid_creds, api_connect, api_command, compare_args_ipa, \
-    module_params_get
+from ansible.module_utils.ansible_freeipa_module import (
+    temp_kinit,
+    temp_kdestroy,
+    valid_creds,
+    api_connect,
+    api_command,
+    compare_args_ipa,
+    module_params_get,
+)
 
 
 def find_hostgroup(module, name):
@@ -129,8 +135,7 @@ def find_hostgroup(module, name):
     _result = api_command(module, "hostgroup_find", name, _args)
 
     if len(_result["result"]) > 1:
-        module.fail_json(
-            msg="There is more than one hostgroup '%s'" % (name))
+        module.fail_json(msg="There is more than one hostgroup '%s'" % (name))
     elif len(_result["result"]) == 1:
         return _result["result"][0]
     else:
@@ -163,19 +168,23 @@ def main():
             # general
             ipaadmin_principal=dict(type="str", default="admin"),
             ipaadmin_password=dict(type="str", required=False, no_log=True),
-
-            name=dict(type="list", aliases=["cn"], default=None,
-                      required=True),
+            name=dict(
+                type="list", aliases=["cn"], default=None, required=True
+            ),
             # present
             description=dict(type="str", default=None),
-            nomembers=dict(required=False, type='bool', default=None),
-            host=dict(required=False, type='list', default=None),
-            hostgroup=dict(required=False, type='list', default=None),
-            action=dict(type="str", default="hostgroup",
-                        choices=["member", "hostgroup"]),
+            nomembers=dict(required=False, type="bool", default=None),
+            host=dict(required=False, type="list", default=None),
+            hostgroup=dict(required=False, type="list", default=None),
+            action=dict(
+                type="str",
+                default="hostgroup",
+                choices=["member", "hostgroup"],
+            ),
             # state
-            state=dict(type="str", default="present",
-                       choices=["present", "absent"]),
+            state=dict(
+                type="str", default="present", choices=["present", "absent"]
+            ),
         ),
         supports_check_mode=True,
     )
@@ -185,10 +194,10 @@ def main():
     # Get parameters
 
     # general
-    ipaadmin_principal = module_params_get(ansible_module,
-                                           "ipaadmin_principal")
-    ipaadmin_password = module_params_get(ansible_module,
-                                          "ipaadmin_password")
+    ipaadmin_principal = module_params_get(
+        ansible_module, "ipaadmin_principal"
+    )
+    ipaadmin_password = module_params_get(ansible_module, "ipaadmin_password")
     names = module_params_get(ansible_module, "name")
 
     # present
@@ -205,27 +214,29 @@ def main():
     if state == "present":
         if len(names) != 1:
             ansible_module.fail_json(
-                msg="Only one hostgroup can be added at a time.")
+                msg="Only one hostgroup can be added at a time."
+            )
         if action == "member":
             invalid = ["description", "nomembers"]
             for x in invalid:
                 if vars()[x] is not None:
                     ansible_module.fail_json(
                         msg="Argument '%s' can not be used with action "
-                        "'%s'" % (x, action))
+                        "'%s'" % (x, action)
+                    )
 
     if state == "absent":
         if len(names) < 1:
-            ansible_module.fail_json(
-                msg="No name given.")
+            ansible_module.fail_json(msg="No name given.")
         invalid = ["description", "nomembers"]
         if action == "hostgroup":
             invalid.extend(["host", "hostgroup"])
         for x in invalid:
             if vars()[x] is not None:
                 ansible_module.fail_json(
-                    msg="Argument '%s' can not be used with state '%s'" %
-                    (x, state))
+                    msg="Argument '%s' can not be used with state '%s'"
+                    % (x, state)
+                )
 
     # Init
 
@@ -235,8 +246,9 @@ def main():
     ccache_name = None
     try:
         if not valid_creds(ansible_module, ipaadmin_principal):
-            ccache_dir, ccache_name = temp_kinit(ipaadmin_principal,
-                                                 ipaadmin_password)
+            ccache_dir, ccache_name = temp_kinit(
+                ipaadmin_principal, ipaadmin_password
+            )
         api_connect()
 
         commands = []
@@ -256,8 +268,9 @@ def main():
                         # For all settings is args, check if there are
                         # different settings in the find result.
                         # If yes: modify
-                        if not compare_args_ipa(ansible_module, args,
-                                                res_find):
+                        if not compare_args_ipa(
+                            ansible_module, args, res_find
+                        ):
                             commands.append([name, "hostgroup_mod", args])
                     else:
                         commands.append([name, "hostgroup_add", args])
@@ -265,47 +278,65 @@ def main():
                         res_find = {}
 
                     member_args = gen_member_args(host, hostgroup)
-                    if not compare_args_ipa(ansible_module, member_args,
-                                            res_find):
+                    if not compare_args_ipa(
+                        ansible_module, member_args, res_find
+                    ):
                         # Generate addition and removal lists
                         host_add = list(
-                            set(host or []) -
-                            set(res_find.get("member_host", [])))
+                            set(host or [])
+                            - set(res_find.get("member_host", []))
+                        )
                         host_del = list(
-                            set(res_find.get("member_host", [])) -
-                            set(host or []))
+                            set(res_find.get("member_host", []))
+                            - set(host or [])
+                        )
                         hostgroup_add = list(
-                            set(hostgroup or []) -
-                            set(res_find.get("member_hostgroup", [])))
+                            set(hostgroup or [])
+                            - set(res_find.get("member_hostgroup", []))
+                        )
                         hostgroup_del = list(
-                            set(res_find.get("member_hostgroup", [])) -
-                            set(hostgroup or []))
+                            set(res_find.get("member_hostgroup", []))
+                            - set(hostgroup or [])
+                        )
 
                         # Add members
                         if len(host_add) > 0 or len(hostgroup_add) > 0:
-                            commands.append([name, "hostgroup_add_member",
-                                             {
-                                                 "host": host_add,
-                                                 "hostgroup": hostgroup_add,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "hostgroup_add_member",
+                                    {
+                                        "host": host_add,
+                                        "hostgroup": hostgroup_add,
+                                    },
+                                ]
+                            )
                         # Remove members
                         if len(host_del) > 0 or len(hostgroup_del) > 0:
-                            commands.append([name, "hostgroup_remove_member",
-                                             {
-                                                 "host": host_del,
-                                                 "hostgroup": hostgroup_del,
-                                             }])
+                            commands.append(
+                                [
+                                    name,
+                                    "hostgroup_remove_member",
+                                    {
+                                        "host": host_del,
+                                        "hostgroup": hostgroup_del,
+                                    },
+                                ]
+                            )
                 elif action == "member":
                     if res_find is None:
                         ansible_module.fail_json(
-                            msg="No hostgroup '%s'" % name)
+                            msg="No hostgroup '%s'" % name
+                        )
 
                     # Ensure members are present
-                    commands.append([name, "hostgroup_add_member",
-                                     {
-                                         "host": host,
-                                         "hostgroup": hostgroup,
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "hostgroup_add_member",
+                            {"host": host, "hostgroup": hostgroup,},
+                        ]
+                    )
             elif state == "absent":
                 if action == "hostgroup":
                     if res_find is not None:
@@ -314,14 +345,17 @@ def main():
                 elif action == "member":
                     if res_find is None:
                         ansible_module.fail_json(
-                            msg="No hostgroup '%s'" % name)
+                            msg="No hostgroup '%s'" % name
+                        )
 
                     # Ensure members are absent
-                    commands.append([name, "hostgroup_remove_member",
-                                     {
-                                         "host": host,
-                                         "hostgroup": hostgroup,
-                                     }])
+                    commands.append(
+                        [
+                            name,
+                            "hostgroup_remove_member",
+                            {"host": host, "hostgroup": hostgroup,},
+                        ]
+                    )
             else:
                 ansible_module.fail_json(msg="Unkown state '%s'" % state)
 
@@ -335,8 +369,9 @@ def main():
                 else:
                     changed = True
             except Exception as e:
-                ansible_module.fail_json(msg="%s: %s: %s" % (command, name,
-                                                             str(e)))
+                ansible_module.fail_json(
+                    msg="%s: %s: %s" % (command, name, str(e))
+                )
             # Get all errors
             # All "already a member" and "not a member" failures in the
             # result are ignored. All others are reported.
@@ -345,10 +380,14 @@ def main():
                 failed = result["failed"]["member"]
                 for member_type in failed:
                     for member, failure in failed[member_type]:
-                        if "already a member" not in failure \
-                           and "not a member" not in failure:
-                            errors.append("%s: %s %s: %s" % (
-                                command, member_type, member, failure))
+                        if (
+                            "already a member" not in failure
+                            and "not a member" not in failure
+                        ):
+                            errors.append(
+                                "%s: %s %s: %s"
+                                % (command, member_type, member, failure)
+                            )
             if len(errors) > 0:
                 ansible_module.fail_json(msg=", ".join(errors))
 
