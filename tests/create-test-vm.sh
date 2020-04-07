@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CLOUD_IMAGE="$1"
+DISTRO_NAME="$1"
 VM_NAME="$2"
 
 set -e
@@ -94,17 +94,9 @@ eject_ci_data() {
     virsh change-media $vm_name $device_name --eject
 }
 
-check_if_cloud_image_exists() {
-    if [[ ! -f $CLOUD_IMAGE ]]; then
-        die "'$CLOUD_IMAGE' is not a valid cloud image path"
-    fi
-}
-
 main() {
-    check_if_cloud_image_exists
-
     kvm-install-vm create \
-        -i $CLOUD_IMAGE \
+        -t $DISTRO_NAME \
         -c 2 \
         -m 2048 \
         -s $PWD/provision-vm.sh \

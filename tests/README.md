@@ -42,27 +42,25 @@ Please download it from it's git repository in https://github.com/giovtorres/kvm
 
 Last but not least, you will need to download cloud images to start your VM from.
 
-There are a few suggestions:
-
-* CentOS Stream 20200113: https://cloud.centos.org/centos/8-stream/x86_64/images/CentOS-Stream-GenericCloud-8-20200113.0.x86_64.qcow2
-* CentOS 8.1: https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2
-* CentOS 7.7: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1907.qcow2.xz
-* CentOS 7.6: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1811.qcow2.xz
-* CentOS 7.3: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1611.qcow2.xz
-
 
 ### Creating a VM
 
-To create test vms you will need to use `./create-test-vm.sh <cloud-image-localpath> <vm-name>`.
+To create test vms you will need to use `./create-test-vm.sh <distro-name> <vm-name>`.
 
 This script will start a VM from a cloud image, perform all basic configuration and then configure an FreeIPA server with DNS support. The whole process should take from 10 to 20 minutes.
+
+Currently the valid distro names are:
+
+* centos7.3
+* centos7.6
+* centos7.7
+* centos8.1
+* centos-stream-20200113
 
 This is an example of execution:
 
 ```console
-./create-test-vm.sh \
-    ~/cloud-images/centos8.1/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2 \
-    ipa-centos8.1
+./create-test-vm.sh centos8.1 ipa-centos8.1
 ```
 
 At the end of the process the script will create a snapshot called `ipa-installed` so will be able to revert to it after tests if you need to.
