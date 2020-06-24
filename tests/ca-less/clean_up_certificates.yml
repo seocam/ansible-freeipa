@@ -1,7 +1,6 @@
 ---
 - name: Clean up certificates
   hosts: localhost
-  gather_facts: false
 
   tasks:
   - name: Run generate-certificates.sh
@@ -11,5 +10,5 @@
     args:
       chdir: "{{ playbook_dir }}"
     with_items:
-      - "{{ groups.ipaserver[0] }}"
+      - "{{ ansible_fqdn }}"
       - "{{ groups.ipareplicas[0] }}"

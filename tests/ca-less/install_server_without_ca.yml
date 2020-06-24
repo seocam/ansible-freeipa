@@ -1,15 +1,15 @@
 ---
 - name: Generate certificates
   hosts: localhost
-  gather_facts: false
+  gather_facts: true
 
   tasks:
   - name: Run generate-certificates.sh
     command: >
       /bin/bash
       generate-certificates.sh create
-      "{{ groups.ipaserver[0] }}"
-      "{{ ipaserver_domain | default(groups.ipaserver[0].split('.')[1:] | join ('.')) }}"
+      "{{ ansible_fqdn }}"
+      "{{ ipaserver_domain | default(ansible_fqdn.split('.')[1:] | join ('.')) }}"
     args:
       chdir: "{{ playbook_dir }}"
 
@@ -59,7 +59,7 @@
 
     - name: Copy p12 certificates
       copy:
-        src: "{{ playbook_dir }}/certificates/{{ item }}/{{ groups.ipaserver[0] }}/cert.p12"
+        src: "{{ playbook_dir }}/certificates/{{ item }}/{{ ansible_fqdn }}/cert.p12"
         dest: "/root/ca-less-test/{{ item }}.p12"
         owner: root
         group: root

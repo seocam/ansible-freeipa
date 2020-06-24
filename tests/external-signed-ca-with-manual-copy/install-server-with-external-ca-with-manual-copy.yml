@@ -10,23 +10,22 @@
     state: present
 
   post_tasks:
-  - name: Copy CSR /root/ipa.csr from node to "{{ groups.ipaserver[0] + '-ipa.csr' }}"
+  - name: Copy CSR /root/ipa.csr from node to "{{ ansible_fqdn + '-ipa.csr' }}"
     fetch:
       src: /root/ipa.csr
-      dest: "{{ groups.ipaserver[0] + '-ipa.csr' }}"
+      dest: "{{ ansible_fqdn + '-ipa.csr' }}"
       flat: yes
 
 - name: Get /root/ipa.csr, create CA, sign with our CA and copy to node
   hosts: localhost
-  gather_facts: false
 
   tasks:
   - name: Run external-ca.sh
     command: >
       /bin/bash
       external-ca.sh
-      "{{ groups.ipaserver[0] }}"
-      "{{ ipaserver_domain | default(groups.ipaserver[0].split('.')[1:] | join ('.')) }}"
+      "{{ ansible_fqdn }}"
+      "{{ ipaserver_domain | default(ansible_fqdn.split('.')[1:] | join ('.')) }}"
     args:
       chdir: "{{ playbook_dir }}"
 
@@ -38,9 +37,9 @@
     #ipaserver_external_ca_file: "cacert.asc"
 
   pre_tasks:
-  - name: Copy "{{ groups.ipaserver[0] + '-chain.crt' }}" to /root/chain.crt on node
+  - name: Copy "{{ ansible_fqdn + '-chain.crt' }}" to /root/chain.crt on node
     copy:
-      src: "{{ groups.ipaserver[0] + '-chain.crt' }}"
+      src: "{{ ansible_fqdn + '-chain.crt' }}"
       dest: "/root/chain.crt"
       force: yes
 

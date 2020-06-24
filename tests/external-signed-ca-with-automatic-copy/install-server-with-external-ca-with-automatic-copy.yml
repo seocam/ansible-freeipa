@@ -12,15 +12,14 @@
 
 - name: Create CA, get /root/ipa.csr signed by your CA, ..
   hosts: localhost
-  gather_facts: false
 
   tasks:
   - name: Run external-ca.sh
     command: >
       /bin/bash
       external-ca.sh
-      "{{ groups.ipaserver[0] }}"
-      "{{ ipaserver_domain | default(groups.ipaserver[0].split('.')[1:] | join ('.')) }}"
+      "{{ ansible_fqdn }}"
+      "{{ ipaserver_domain | default(ansible_fqdn.split('.')[1:] | join ('.')) }}"
     args:
       chdir: "{{ playbook_dir }}"
 
@@ -28,8 +27,8 @@
   hosts: ipaserver
   become: true
   vars:
-    ipaserver_external_cert_files_from_controller: "{{ groups.ipaserver[0] + '-chain.crt' }}"
-    #ipaserver_external_ca_file: "{{ groups.ipaserver[0] + '-cacert.asc' }}"
+    ipaserver_external_cert_files_from_controller: "{{ ansible_fqdn + '-chain.crt' }}"
+    #ipaserver_external_ca_file: "{{ ansible_fqdn + '-cacert.asc' }}"
 
   roles:
   - role: ipaserver
