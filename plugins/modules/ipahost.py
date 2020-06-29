@@ -582,6 +582,20 @@ def check_parameters(
                         "'member' for state '%s'" % (x, state))
 
 
+def find_duplicate_names(names):
+    unique_names = set()
+    dups = set()
+
+    for obj in names:
+        name = obj.get("name")
+        if name in unique_names:
+            dups.add(name)
+        else:
+            unique_names.add(name)
+
+    return dups
+
+
 def main():
     host_spec = dict(
         # present
@@ -782,6 +796,13 @@ def main():
     if hosts is not None:
         names = hosts
 
+    duplicate_names = find_duplicate_names(names)
+    if duplicate_names:
+        ansible_module.fail_json(
+            msg="there are host names used more than once" % list(duplicate_names),
+            duplicates=duplicate_names,
+        )
+
     # Init
 
     changed = False
@@ -799,15 +820,10 @@ def main():
         server_realm = api_get_realm()
 
         commands = []
-        host_set = set()
 
         for host in names:
             if isinstance(host, dict):
                 name = host.get("name")
-                if name in host_set:
-                    ansible_module.fail_json(
-                        msg="host '%s' is used more than once" % name)
-                host_set.add(name)
                 description = host.get("description")
                 locality = host.get("locality")
                 location = host.get("location")
@@ -1341,8 +1357,6 @@ def main():
 
             else:
                 ansible_module.fail_json(msg="Unkown state '%s'" % state)
-
-        del host_set
 
         # Execute commands
 

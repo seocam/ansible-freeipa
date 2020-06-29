@@ -110,4 +110,4 @@
       - name: "{{ host3_fqdn }}"
         force: yes
     register: result
-    failed_when: result.changed or "is used more than once" not in result.msg
+    failed_when: result.changed or "used more than once" not in result.msg

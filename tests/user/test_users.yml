@@ -102,7 +102,7 @@
         first: user3
         last: Last
     register: result
-    failed_when: result.changed or "is used more than once" not in result.msg
+    failed_when: result.changed or "used more than once" not in result.msg
 
   - name: Remove test users
     ipauser:

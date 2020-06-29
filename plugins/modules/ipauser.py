@@ -729,6 +729,23 @@ def gen_certmapdata_args(certmapdata):
     return {"ipacertmapdata": to_text(certmapdata)}
 
 
+def find_duplicate_names(names):
+    unique_names = set()
+    dups = set()
+
+    for obj in names:
+        if not isinstance(obj, dict):
+            continue
+
+        name = obj.get("name")
+        if name in unique_names:
+            dups.add(name)
+        else:
+            unique_names.add(name)
+
+    return dups
+
+
 def main():
     user_spec = dict(
         # present
@@ -930,6 +947,13 @@ def main():
     if users is not None:
         names = users
 
+    duplicate_names = find_duplicate_names(names)
+    if duplicate_names:
+        ansible_module.fail_json(
+            msg="there are user names used more than once" % list(duplicate_names),
+            duplicates=duplicate_names,
+        )
+
     # Init
 
     changed = False
@@ -958,15 +982,10 @@ def main():
         # commands
 
         commands = []
-        user_set = set()
 
         for user in names:
             if isinstance(user, dict):
                 name = user.get("name")
-                if name in user_set:
-                    ansible_module.fail_json(
-                        msg="user '%s' is used more than once" % name)
-                user_set.add(name)
                 # present
                 first = user.get("first")
                 last = user.get("last")
@@ -1374,8 +1393,6 @@ def main():
 
             else:
                 ansible_module.fail_json(msg="Unkown state '%s'" % state)
-
-        del user_set
 
         # Execute commands
 
