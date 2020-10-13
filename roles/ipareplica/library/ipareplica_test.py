@@ -164,8 +164,8 @@ def main():
             pkinit_cert_files=dict(required=False, type='list', default=[]),
             # client
             no_ntp=dict(required=False, type='bool', default=False),
-            ntp_servers=dict(required=False, type='list', default=[]),
-            ntp_pool=dict(required=False),
+            ntp_servers=dict(required=False, type='list', default=None),
+            ntp_pool=dict(required=False, default=None),
             # dns
             no_reverse=dict(required=False, type='bool', default=False),
             auto_reverse=dict(required=False, type='bool', default=False),
@@ -446,6 +446,9 @@ def main():
         setup_adtrust=options.setup_adtrust,
         setup_kra=options.setup_kra,
         server=options.server,
+        # client
+        ntp_servers=options.ntp_servers,
+        ntp_pool=options.ntp_pool,
         # additional
         client_enrolled=client_enrolled,
         change_master_for_certmonger=change_master_for_certmonger,
