@@ -1,0 +1,62 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-18.04'
+
+steps:
+- script: |
+    sudo apt update --fix-missing
+    sudo apt install qemu-kvm qemu-utils libguestfs-tools genisoimage libvirt-clients libvirt-daemon virtinst whois libvirt-daemon-system libvirt-clients
+    sudo apt install python3-pip python3-setuptools libkrb5-dev libffi-dev
+  displayName: Install dependencies
+  env:
+    DEBIAN_FRONTEND: noninteractive
+
+- script: sudo pip3 install ansible python-gssapi
+  displayName: Install Ansible
+
+- script: 'wget -S --header="accept-encoding: gzip" $CLOUD_IMAGE_URL'
+  displayName: Download cloud images
+  env:
+    CLOUD_IMAGE_URL: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+
+- script: ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+  displayName: Generate a SSH key
+
+- script: |
+    sudo usermod -a -G kvm root
+    sudo usermod -a -G libvirt root
+  displayName: Add user to virtualization groups
+
+- script: |
+    sudo virsh net-autostart default
+    sudo systemctl restart libvirtd.service
+    sudo ./kvm-from-cloud-image.sh
+  displayName: Creave VM from cloud image
+  env:
+    LIBVIRT_DEFAULT_URI: 'qemu:///system'
+
+- script: |
+    source /tmp/ip_address
+    sleep 600
+    cat <<EOT >> ipaserver_inventory
+    [ipaserver]
+    ipaserver.test.local ansible_host=$VM_IP_ADDRESS
+
+    [ipaserver:vars]
+    ipaadmin_password=password1
+    ipadm_password=password1
+    ipaserver_domain=test.local
+    ipaserver_realm=TEST.LOCAL
+    ipaserver_setup_dns=yes
+    ipaserver_auto_forwarders=yes
+    EOT
+
+    ansible-playbook -i ipaserver_inventory playbooks/install-server.yml --ssh-extra-args='-o StrictHostKeyChecking=no'
+
+  displayName: Install IPA
+  env:
+    ANSIBLE_ROLES_PATH: ~/work/1/s/roles:~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles
+    ANSIBLE_MODULE_UTILS: ~/work/1/s/plugins/module_utils:~/.ansible/plugins/module_utils:/usr/share/ansible/plugins/module_utils
+    ANSIBLE_LIBRARY: ~/work/1/s/plugins/modules:~/.ansible/plugins/modules:/usr/share/ansible/plugins/modules
